@@ -1,3 +1,4 @@
+/*! by Steve Clay http://code.google.com/p/mrclay/source/browse/trunk */
 /**
  * Select the text within a "text box"
  *

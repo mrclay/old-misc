@@ -1,3 +1,7 @@
+/*! selectText jQuery plugin by Steve Clay http://code.google.com/p/mrclay/source/browse/trunk */
+/* 
+ * Simple plugin to select a range of text within a text box/textarea
+ */
 (function () {
 
     /**

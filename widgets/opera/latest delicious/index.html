@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<title>Latest Del.icio.us</title>
+<link rel="stylesheet" type="text/css" href="index.css">
+<script type="text/javascript" src="js/player.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/pref.js"></script>
+<script type="text/javascript" src="js/index.js"></script>
+</head>
+<body>
+<div id="body">
+<span id="del">
+	<img src="img/del.png" alt="toggle widget"><span class="tooltip">toggle widget</span>
+</span>
+<div class="cB hidePrefs" id="widget">
+	<div class="cBw"></div><div class="cBt"><div></div></div>
+	
+	<div id="controls">
+		<form method="get" action="#" id="search">
+			tags: <input type="text" value="" id="tags"><input type="submit" value="fetch">
+		</form>	
+	</div>
+	<div id="results"></div>
+	<div class="rc"></div><div class="rc"></div>
+	
+	<div id="prefs">
+		<h1>Latest Del.icio.us Posts</h1>
+		<p>Set this widget to display "Always on top" and place it near the top right corner of your screen. Click the del.icio.us icon to toggle the interface and pull up your last query.</p>
+		<h2>Preferences</h2>
+		<form method="get" action="#" id="prefsForm">
+			<div>Del.icio.us username: <input type="text" value="" id="user"></div>
+			<div>Results to display: <input type="text" value="" id="count"> (1-100)</div>
+			<div>Minimize After Opening Link: <input type="checkbox" id="minimizeAfterOpenUrl"></div>
+			<div>Show Favicons: <input type="checkbox" id="showFavicons"></div>
+			<!--<div>Show MP3 Players: <input type="checkbox" id="showPlayers"></div>-->
+			<div><input type="submit" value="save"></div>
+		</form>
+		<h2 id="notes">Notes</h2>
+		<p>Thanks <a href="http://del.icio.us/help">del.icio.us</a>, <a href="http://jquery.com/">JQuery</a>, and <a href="http://www.visualjquery.com/">VisualJQuery</a>. If you like, please <a href="http://widgets.opera.com/widget/4508">vote or comment</a>. You may also <a href="http://mrclay.org/index.php/2006/07/03/widgets/">comment/report
+			bugs/suggest features</a> on my blog.</p>
+	</div>
+	
+	<span id="flip"><img src="img/flip.png" alt="toggle preferences">
+		<span class="tooltip">toggle preferences</span>
+	</span>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Easing demo</title>
+<script type="text/javascript" src="easing.js"></script>
+<script type="text/javascript" src="MrClay_Transition.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var
+		t = new MrClay.Transition(1000, 40),
+		b = document.getElementsByTagName('body')[0],
+		en = document.getElementById('easeNone'),
+		start = -5,	end = 600,
+		lin = t.createTracker(start, end),
+		easingClasses = ['Expo','Sine','Circ','Bounce','Back','Elastic','Quad','Cubic','Quint'],
+		easingFunctions = ['easeIn','easeInOut','easeOut'],
+		i, j, cl, fl, h2, div, p,
+		els = [], fns = [],	cls = [];
+	//create elements and tracker functions
+	for (i=0, cl=easingClasses.length; i<cl; i++) {
+		div = b.appendChild(document.createElement('div'));
+		h2 = div.appendChild(document.createElement('h2'));
+		h2.innerHTML = 'Easing.'+easingClasses[i];
+		els[i] = [];
+		fns[i] = [];
+		cls[i] = [];
+		for (j=0, fl=easingFunctions.length; j<fl; j++) {
+			p = div.appendChild(document.createElement('p'));
+			// create P for each function
+			els[i].push(p);
+			p.innerHTML = 'Easing.'+easingClasses[i]+'.'+easingFunctions[j];
+			// create tracker for each
+			fns[i][j] = t.createTracker(start, end, Easing[easingClasses[i]][easingFunctions[j]]);
+			cls[i][j] = t.createTracker('#00f','#c00', Easing[easingClasses[i]][easingFunctions[j]]);
+		}
+	}
+	var 
+		transition = document.getElementById('transition'),
+		tColor = t.createTracker('#00f','#c00');
+	t.addFrameFunction(function(){
+		var i, j, cl, fl;
+		for (i=0, cl=easingClasses.length; i<cl; i++) {
+			for (j=0, fl=easingFunctions.length; j<fl; j++) {
+				els[i][j].style.marginLeft = fns[i][j]()+'px';
+				els[i][j].style.borderColor = 'rgb(' + cls[i][j]()+')';
+			}
+		}
+		en.style.marginLeft = lin()+'px';
+		en.style.borderColor = 'rgb(' + tColor() + ')';
+		transition.style.color = 'rgb(' + tColor() + ')';
+	});
+	t.trackElementStyle('#fff', '#ddd', Easing.Sine.easeOut, document.body, 'background');
+	var loop = false;
+	var rewind = function() {
+		if (loop) {
+			t.stop();
+			t.loadFrame(0);
+		}
+	};
+	var begin = function() {
+		loop && t.begin();
+	}
+	t.setEndFunction(function(){
+		setTimeout(rewind, 800);
+		setTimeout(begin, 1600);
+	});
+	document.getElementById('toggle').onclick = function() {
+		if (!loop)
+			t.begin();
+		else {
+			rewind();
+		}
+		loop = !loop;
+	};
+};
+</script>
+<style type='text/css'>
+div {background:#eee; margin:2em 0 0 15px; padding-bottom:.5em; width:605px;}
+h2 {font-size:1.2em; position:relative; top:-1.0em; margin:0 0 -.5em 0; text-align:center}
+p {padding:0 0 0 7px; margin:0 0 .5em -5px; border-left:10px #00f solid;}
+p.intro {border:0; padding:0; margin:1em 0}
+input {position:relative}
+</style>
+</head>
+<body>
+<h1>Easing demo using <a id='transition' href='MrClay_Transition.js'>MrClay.Transition</a></h1>
+<p class="intro">This demo
+
+uses one Transition object to track 28 colors and 28 values using <a href="http://www.robertpenner.com/easing/">Robert
+Penner's Easing Equations</a> (ported from ActionScript). Since each color is
+handled internally by 3 components, the object calculates 112 values per frame
+@ 40fps (watch your CPU). Optimization TODO: Cache
+identical easing calculations (expensive).</p>
+<input type="button" name='toggle' id='toggle' value="Start/Stop all">
+<div>
+	<h2>Easing.Linear</h2>
+	<p id='easeNone'>Easing.Linear.easeNone</p>
+</div>
+</body>
+</html>
