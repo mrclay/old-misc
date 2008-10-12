@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Store (not encrypt) tamper-proof strings in an HTTP cookie
+ * Store tamper-proof strings in an HTTP cookie
  *
  * <code>
  * $storage = new MrClay_CookieStorage(array(
@@ -25,20 +25,21 @@
  *         // cookie not present
  *     }
  * }
+ * 
+ * // encrypt cookie contents
+ * $storage = new MrClay_CookieStorage(array(
+ *     'secret' => '67676kmcuiekihbfyhbtfitfytrdo=op-p-=[hH8'
+ *     ,'mode' => MrClay_CookieStorage::MODE_ENCRYPT
+ * ));
  * </code>
  */
 class MrClay_CookieStorage {
 
     // conservative storage limit considering variable-length Set-Cookie header
     const LENGTH_LIMIT = 3896;
+    const MODE_VISIBLE = 0;
+    const MODE_ENCRYPT = 1;
     
-    /**
-     * @var array options
-     */
-    private $_o;
-
-    private $_returns = array();
-
     /**
      * @var array errors that occured
      */
@@ -54,6 +55,24 @@ class MrClay_CookieStorage {
     {
         return str_replace('=', '', base64_encode(hash('ripemd160', $input, true)));
     }
+    
+    public static function encrypt($key, $str)
+    {
+        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);  
+        $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);  
+        $data = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $str, MCRYPT_MODE_ECB, $iv);
+        return base64_encode($data);
+    }
+    
+    public static function decrypt($key, $data)
+    {
+        if (false === ($data = base64_decode($data))) {
+            return false;
+        }
+        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);  
+        $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);  
+        return mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $data, MCRYPT_MODE_ECB, $iv);
+    }
 
     public function getDefaults()
     {
@@ -64,6 +83,9 @@ class MrClay_CookieStorage {
             ,'path' => '/'
             ,'expire' => '2147368447' // Sun, 17-Jan-2038 19:14:07 GMT (Google)
             ,'hashFunc' => array('MrClay_CookieStorage', 'hash')
+            ,'encryptFunc' => array('MrClay_CookieStorage', 'encrypt')
+            ,'decryptFunc' => array('MrClay_CookieStorage', 'decrypt')
+            ,'mode' => self::MODE_VISIBLE
         );
     }
 
@@ -81,6 +103,13 @@ class MrClay_CookieStorage {
             $this->errors[] = 'Must first set the option: secret.';
             return false;
         }
+        return ($this->_o['mode'] === self::MODE_ENCRYPT)
+            ? $this->_storeEncrypted($name, $str)
+            : $this->_store($name, $str);
+    }
+    
+    private function _store($name, $str)
+    {
         if (! is_callable($this->_o['hashFunc'])) {
             $this->errors[] = 'Hash function not callable';
             return false;
@@ -94,7 +123,31 @@ class MrClay_CookieStorage {
             $this->errors[] = 'Cookie is likely too large to store.';
             return false;
         }
-        $res = setcookie($name, $raw, $this->_o['expire'], $this->_o['path'], $this->_o['domain'], $this->_o['secure']);
+        $res = setcookie($name, $raw, $this->_o['expire'], $this->_o['path'], 
+                         $this->_o['domain'], $this->_o['secure']);
+        if ($res) {
+            return true;
+        } else {
+            $this->errors[] = 'Setcookie() returned false. Headers may have been sent.';
+            return false;
+        }
+    }
+    
+    private function _storeEncrypted($name, $str)
+    {
+        if (! is_callable($this->_o['encryptFunc'])) {
+            $this->errors[] = 'Encrypt function not callable';
+            return false;
+        }
+        $time = base_convert($_SERVER['REQUEST_TIME'], 10, 36); // pack time
+        $key = self::hash($this->_o['secret']);
+        $raw = call_user_func($this->_o['encryptFunc'], $key, $key . $time . '|' . $str);
+        if (strlen($name . $raw) > self::LENGTH_LIMIT) {
+            $this->errors[] = 'Cookie is likely too large to store.';
+            return false;
+        }
+        $res = setcookie($name, $raw, $this->_o['expire'], $this->_o['path'], 
+                         $this->_o['domain'], $this->_o['secure']);
         if ($res) {
             return true;
         } else {
@@ -108,11 +161,18 @@ class MrClay_CookieStorage {
      */
     public function fetch($name)
     {
-        if (isset($this->_returns[$name])) {
-            return $this->_returns[$name][0];
-        }
         if (!isset($_COOKIE[$name])) {
             return null;
+        }
+        return ($this->_o['mode'] === self::MODE_ENCRYPT)
+            ? $this->_fetchEncrypted($name)
+            : $this->_fetch($name);
+    }
+    
+    private function _fetch($name)
+    {
+        if (isset($this->_returns[self::MODE_VISIBLE][$name])) {
+            return $this->_returns[self::MODE_VISIBLE][$name][0];
         }
         $cookie = get_magic_quotes_gpc()
             ? stripslashes($_COOKIE[$name])
@@ -129,14 +189,45 @@ class MrClay_CookieStorage {
             return false;
         }
         $time = base_convert($time, 36, 10); // unpack time
-        $this->_returns[$name] = array($str, $time);
+        $this->_returns[self::MODE_VISIBLE][$name] = array($str, $time);
+        return $str;
+    }
+    
+    private function _fetchEncrypted($name)
+    {
+        if (isset($this->_returns[self::MODE_ENCRYPT][$name])) {
+            return $this->_returns[self::MODE_ENCRYPT][$name][0];
+        }
+        if (! is_callable($this->_o['decryptFunc'])) {
+            $this->errors[] = 'Decrypt function not callable';
+            return false;
+        }
+        $cookie = get_magic_quotes_gpc()
+            ? stripslashes($_COOKIE[$name])
+            : $_COOKIE[$name];
+        $key = self::hash($this->_o['secret']);
+        $timeStr = call_user_func($this->_o['decryptFunc'], $key, $cookie);
+        if (! $timeStr) {
+            $this->errors[] = 'Cookie was tampered with.';
+            return false;
+        }
+        $timeStr = rtrim($timeStr, "\x00");
+        // verify decryption
+        if (0 !== strpos($timeStr, $key)) {
+            $this->errors[] = 'Cookie was tampered with.';
+            return false;
+        }
+        $timeStr = substr($timeStr, strlen($key));
+        list($time, $str) = explode('|', $timeStr, 2);
+        $time = base_convert($time, 36, 10); // unpack time
+        $this->_returns[self::MODE_ENCRYPT][$name] = array($str, $time);
         return $str;
     }
 
     public function getTimestamp($name)
     {
         if (is_string($this->fetch($name))) {
-            return $this->_returns[$name][1];
+            return $this->_returns[$this->_o['mode']][$name][1];
         }
         return false;
     }
@@ -145,5 +236,12 @@ class MrClay_CookieStorage {
     {
         setcookie($name, '', time() - 3600, $this->_o['path'], $this->_o['domain'], $this->_o['secure']);
     }
+    
+    /**
+     * @var array options
+     */
+    private $_o;
+
+    private $_returns = array();
 }
 
