@@ -17,16 +17,9 @@
  * </code>
  */
 class MrClay_Html {
-	public $version = '1.3';
-	public $charset = 'UTF-8';	// see http://php.net/htmlentities
-	public $quote_style = ENT_QUOTES;	// see http://php.net/htmlentities
-	private $_xml;
-	private $_end_token;
-	private $_t;			// tab or ''
-	private $_n;			// newline or ''
-	private $_i;			// multiple tabs or ''
-	private $_indentLevel = 0;
-
+	public $charset = 'UTF-8';	// see http://php.net/htmlspecialchars
+	public $quote_style = ENT_QUOTES;	// see http://php.net/htmlspecialchars
+	
 	public function __construct($xml = true) {
 		$this->_xml = $xml;
 		$this->_end_token = ($this->_xml)? ' />' : '>';
@@ -37,7 +30,8 @@ class MrClay_Html {
 	// if $o['headings'] is provided, count($o['headings']) should equal the number of columns
 	public function build_table_from_assoc_array($assocArray, $options = array()) {
 		$o = array_merge(array(	// default options
-			 'applyHtmlentities' => true
+			 'applyHtmlentities' => true // deprecated, use 'escapeValues'
+            ,'escapeValues' => true
 			,'caption' => ''
 			,'attributes' => array(
 				'class' => 'resultTable'
@@ -57,10 +51,15 @@ class MrClay_Html {
 			,'radios_inputName' => 'newId'
 			,'radios_formatColumn' => '&nbsp;{value}'
 			,'orientation' => 'vertical' // or 'horizontal'
-			,'stringifyFunc' => array($this, '_stringify')
+			,'stringifyFunc' => array($this, 'stringify')
 			,'attributorFunc' => false
 		), $options);
 
+        if (! $o['applyHtmlentities']) {
+            $o['escapeValues'] = false;
+        }
+        unset($o['applyHtmlentities']);
+        
 		if (empty($o['headings']) && !empty($assocArray)) {
 			$normalizedRowKeys = array_keys($assocArray);
 			$o['headings'] = array_keys($assocArray[$normalizedRowKeys[0]]);
@@ -105,12 +104,12 @@ class MrClay_Html {
 
 	public function build_dl_from_row($row, $options = array()) {
 		$o = array_merge(array(	// default options
-			 'applyHtmlentities' => true
+			 'escapeValues' => true
 			,'attributes' => array(
 				'class' => 'resultDl'
 			)
 			,'headings' => array()
-			,'stringifyFunc' => array($this, '_stringify')
+			,'stringifyFunc' => array($this, 'stringify')
 		), $options);
 
 		if (empty($o['headings'])) {
@@ -119,17 +118,19 @@ class MrClay_Html {
 
 		$dl = '';
 		foreach ($row as $key => $value) {
-			if (!is_string($value)) {
-				$value = call_user_func($o['stringifyFunc'], $value);
-			}
 			$dl .= $this->_t . $this->wrap($key, 'dt');
-			if ('' == $value) {
-				$dl .= $this->_t . $this->wrap('&nbsp;', 'dd');
+            if (!is_string($value)) {
+				$value = call_user_func($o['stringifyFunc'], $value);
+                $dl .= $this->_t . $this->wrap($value, 'dd');
 			} else {
-				$dl .= $o['applyHtmlentities']
-					? $this->_t . $this->hwrap($value, 'dd')
-					: $this->_t . $this->wrap($value, 'dd');
-			}
+    			if ('' === $value) {
+    				$dl .= $this->_t . $this->wrap('&nbsp;', 'dd');
+    			} else {
+    				$dl .= $o['escapeValues']
+    					? $this->_t . $this->hwrap($value, 'dd')
+    					: $this->_t . $this->wrap($value, 'dd');
+    			}
+            }
 		}
 		$dl = $this->wrap($dl, 'dl', $o['attributes']);
 
@@ -190,26 +191,23 @@ class MrClay_Html {
 		return $this->open_tag($element, $attributes)."{$contents}</{$element}>";
 	}
 
-	// wrap with htmlentities($contents)
+	// wrap with htmlspecialchars($contents)
 	public function hwrap($contents, $element, $attributes = '') {
 		return $this->wrap(
-			htmlentities($contents, $this->quote_style, $this->charset)
+			htmlspecialchars($contents, $this->quote_style, $this->charset)
 			,$element
 			,$attributes
 		);
 	}
 
-	// convenience
+	// apply htmlspecialchars
 	public function h($string) {
-		return htmlentities($string,$this->quote_style,$this->charset);
+		return htmlspecialchars($string,$this->quote_style,$this->charset);
 	}
+    
+    // apply html_entity_decode
 	public function hd($string) {
-		// http://us2.php.net/manual/en/function.html-entity-decode.php#61610
-		$string = preg_replace('~&#x([0-9a-f]+);~ei', 'chr(hexdec("\\1"))', $string);
-		$string = preg_replace('~&#([0-9]+);~e', 'chr("\\1")', $string);
-		$trans_tbl = get_html_translation_table(HTML_ENTITIES);
-		$trans_tbl = array_flip($trans_tbl);
-		return strtr($string, $trans_tbl);
+        return html_entity_decode($string, $this->quote_style,$this->charset);
 	}
 
 	public function external_script($url) {
@@ -226,7 +224,7 @@ class MrClay_Html {
 			$title = 'Alternative Style';
 		}
 		if (!empty($title)) {
-			$attributes['title'] = htmlentities($title,$this->quote_style,$this->charset);
+			$attributes['title'] = htmlspecialchars($title,$this->quote_style,$this->charset);
 		}
 		$attributes['rel'] = ($alternative)? 'Alternate StyleSheet' : 'StyleSheet';
 
@@ -259,12 +257,6 @@ class MrClay_Html {
 		  : $this->wrap($selectContents, 'select', $attributes);
 	}
 
-
-	public function build_table_from_mysql_result($result, $options = array()) {
-		return $this->build_table_from_assoc_array(
-			$this->_assoc_array_from_mysql_result($result), $options
-		);
-	}
 
 	// if at all possible, use the 'headings' option in the table instead...
 	//$renameArray = array('id'=>'The ID','COUNT(*)'=>'How Many');
@@ -332,11 +324,8 @@ class MrClay_Html {
 		return "</body></html>";
 	}
 
-	/******************************************
-	 * "Private" functions
-	 ******************************************/
-
-	private function _stringify($foo) {
+    // must return raw HTML
+	public function stringify($foo) {
 		if (is_null($foo)) {
 			return 'N/A';
 		}
@@ -349,14 +338,6 @@ class MrClay_Html {
 		return '<pre>' . $this->h(var_export($foo, 1)) . '</pre>';
 	}
 
-	private function _assoc_array_from_mysql_result($result) {
-		$array = array();
-		while ($row = mysql_fetch_assoc($result)) {
-			array_push($array, $row);
-		}
-		return $array;
-	}
-
 	private function _expand_attributes($attributes) {
 		if (!is_array($attributes)) {
 			return empty($attributes)? '' : ' '.trim($attributes);
@@ -364,7 +345,7 @@ class MrClay_Html {
 		$buffer = '';
 		foreach ($attributes as $property => $value) {
 			if ($value !== false) {
-				$buffer .= ' '.$property.'="'.htmlentities($value,$this->quote_style,$this->charset).'"';
+				$buffer .= ' '.$property.'="'.htmlspecialchars($value, ENT_QUOTES, $this->charset).'"';
 			}
 		}
 		return $buffer;
@@ -391,8 +372,12 @@ class MrClay_Html {
 		foreach ($row as $value) {
 			if (!is_string($value)) {
 				$value = call_user_func($o['stringifyFunc'], $value);
-			}
-			$buffer .= $this->_table_cell($value, 'td', $o);
+                $tempO = $o;
+                $tempO['escapeValues'] = false;
+                $buffer .= $this->_table_cell($value, 'td', $tempO);
+			} else {
+                $buffer .= $this->_table_cell($value, 'td', $o);
+            }
 		}
 		return $isEven
 			? $this->wrap($buffer, 'tr', array(
@@ -408,10 +393,9 @@ class MrClay_Html {
 				if (!isset($trs[$key])) {
 					$trs[$key] = '';
 				}
-				if (!is_string($value)) {
+				if (! is_string($value)) {
 					$value = call_user_func($o['stringifyFunc'], $value);
-				}
-				if ($o['applyHtmlentities']) {
+				} elseif ($o['escapeValues']) {
 					$value = $this->h($value);
 				}
 				$trs[$key] .= $this->_table_cell($value, 'td', $o);
@@ -433,7 +417,7 @@ class MrClay_Html {
         if (trim($contents) == '') {
 			return $this->_t.$this->wrap($o['emptyCellContent'], $element, $attrs);
 		}
-		if (isset($o['applyHtmlentities']) && !$o['applyHtmlentities']) {
+		if (isset($o['escapeValues']) && !$o['escapeValues']) {
 			return $this->_t.$this->wrap($contents, $element, $attrs);
 		}
 		return $this->_t.$this->hwrap($contents, $element, $attrs);
@@ -443,4 +427,11 @@ class MrClay_Html {
 	private function _indent_lines($string) {
 		return $this->_i.str_replace("\n", "\n".$this->_i, $string);
 	}
+    
+    private $_xml;
+	private $_end_token;
+	private $_t;			// tab or ''
+	private $_n;			// newline or ''
+	private $_i;			// multiple tabs or ''
+	private $_indentLevel = 0;
 }
