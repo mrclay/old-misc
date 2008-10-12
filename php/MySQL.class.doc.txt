@@ -1,0 +1,76 @@
+class MySQL
+
+// public properties ///////////////
+
+version
+errors = array()          // array of error messages
+executedQueries = array() // array of executed queries
+timeQueries = false       // add comment with time onto each query
+lastTime = -1;            // elapsed time of last query
+wasError = false;         // did last query cause an error?
+
+// public methods ///////////////
+	
+MySQL($iniPath = '', $host = false, $username = false, $password = false, $db = false)
+	// constructor
+	
+connect($forceRetry = false)
+	// $forceRetry = try to connect again if failed
+
+run($SQL)
+	// executes a query
+
+insert($SQL)
+	// returns last_insert_id after successful insert or -1 for failed insert
+
+result($SQL)
+	// returns a mysql result variable
+
+row($SQL, $fetchType = MYSQL_BOTH)
+	// returns 1 row array or empty array if no result
+
+value($SQL)
+	// returns 1 value
+
+// utility functions //////////
+
+numeric_array($SQL)
+	// returns array of all values of first column
+
+assoc_array($SQL)
+	// returns associative array of all values
+	// eg. $return[0]['id'] = id column of the first row in result
+
+assoc_array_id($SQL, $idColumn)
+	// returns associative array of all values specifying a column to be
+	// used as the return array keys
+	// e.g. $return['3']['name'] = name of user with id = 3
+
+insert_array($table, $fields2values, $fromGPC = true)
+	// insert multiple field/value pairs into table
+	// note: to preview the SQL performed, call the private method:
+	// _insert_array_SQL($table, $fields2values, $fromGPC)
+
+update_array($table, $keyEqualsValue, $fields2values, $fromGPC = true)
+	// update a table with an array of fields=>values
+
+matching_row($table, $keyColumn, $keyValue, $fetchType = MYSQL_BOTH)
+	// returns 1 row from table where keyColumn = keyValuev
+	// note: to see the SQL performed, call the private method:
+	// _matching_row_SQL($table, $keyColumn, $keyValue, $fetchType = MYSQL_BOTH)
+
+safe_string($str, $trim = false, $fromGPC = true)
+	// returns a safe string for use in SQL
+	// Give it an array of strings, it returns an array of safe strings.
+	// To avoid handling Magic Quote stripping, set $fromGPC = false.
+
+placement_reorder($tableName,
+				$placementColName,
+				$idColName,
+				$idMoving,
+				$moveDirection,  // -1 (up), 1 (down), -2 (top), 2 (bottom)
+				$whereClause)
+	// for tables with "ORDER BY placement", this will allow shifting
+	// a row up/down
+
+
