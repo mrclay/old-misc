@@ -49,6 +49,11 @@ class MrClay_CookieStorage {
     {
         $this->_o = array_merge(self::getDefaults(), $options);
     }
+    
+    public static function hash($input)
+    {
+        return str_replace('=', '', base64_encode(hash('ripemd160', $input, true)));
+    }
 
     public function getDefaults()
     {
@@ -58,6 +63,7 @@ class MrClay_CookieStorage {
             ,'secure' => false
             ,'path' => '/'
             ,'expire' => '2147368447' // Sun, 17-Jan-2038 19:14:07 GMT (Google)
+            ,'hashFunc' => array('MrClay_CookieStorage', 'hash')
         );
     }
 
@@ -75,10 +81,15 @@ class MrClay_CookieStorage {
             $this->errors[] = 'Must first set the option: secret.';
             return false;
         }
-        $time = time();
+        if (! is_callable($this->_o['hashFunc'])) {
+            $this->errors[] = 'Hash function not callable';
+            return false;
+        }
+        $time = base_convert($_SERVER['REQUEST_TIME'], 10, 36); // pack time
         // tie sig to this cookie name
-        $sig = sha1($this->_o['secret'] . $name . $time . $str);
-        $raw = $sig . '.' . $time . '.' . $str;
+        $hashInput = $this->_o['secret'] . $name . $time . $str;
+        $sig = call_user_func($this->_o['hashFunc'], $hashInput);
+        $raw = $sig . '|' . $time . '|' . $str;
         if (strlen($name . $raw) > self::LENGTH_LIMIT) {
             $this->errors[] = 'Cookie is likely too large to store.';
             return false;
@@ -106,14 +117,18 @@ class MrClay_CookieStorage {
         $cookie = get_magic_quotes_gpc()
             ? stripslashes($_COOKIE[$name])
             : $_COOKIE[$name];
-        list($sig, $time, $str) = explode('.', $cookie, 3);
-        if (strlen($time) < 10
-            || strlen($sig) < 40
-            || $sig !== sha1($this->_o['secret'] . $name . $time . $str)
-        ) {
+        $parts = explode('|', $cookie, 3);
+        if (3 !== count($parts)) {
             $this->errors[] = 'Cookie was tampered with.';
             return false;
         }
+        list($sig, $time, $str) = $parts;
+        $hashInput = $this->_o['secret'] . $name . $time . $str;
+        if ($sig !== call_user_func($this->_o['hashFunc'], $hashInput)) {
+            $this->errors[] = 'Cookie was tampered with.';
+            return false;
+        }
+        $time = base_convert($time, 36, 10); // unpack time
         $this->_returns[$name] = array($str, $time);
         return $str;
     }

@@ -38,7 +38,6 @@ if (null === $user) {
 } elseif (false === $user) {
     // tampering
     $storage->store($name, $userinfo);
-    echo htmlspecialchars($_COOKIE[$name]) . '<br>';
     echo "hack attempt foiled! Cookie re-saved.";
 } else {
     // good data
@@ -50,5 +49,6 @@ if (null === $user) {
         <li><a href="?do=shortCookie">Set short-lived cookie</a>
         <li><a href="?do=tamper">Tamper with cookie</a>
     </ul>
+    <p>$_COOKIE[$name] == <code><?php echo htmlspecialchars($_COOKIE[$name]); ?></code></p>
 <?php
 }
