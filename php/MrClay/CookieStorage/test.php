@@ -9,6 +9,7 @@ $userinfo = 'id:62572,email:bob@yahoo.com,name:Bob';
 
 $storage = new MrClay_CookieStorage(array(
     'secret' => '67676kmcuiekihbfyhbtfitfytrdo=op-p-=[hH8'
+    ,'path' => '' // this URL only for testing
 ));
 
 if (isset($_GET['do'])) {
@@ -19,6 +20,7 @@ if (isset($_GET['do'])) {
     case 'tamper':
         $evilStorage = new MrClay_CookieStorage(array(
             'secret' => 'DifferentSecret'
+            ,'path' => '' // this URL only for testing
         ));
         $evilStorage->store($name, 'id:345,email:phil@yahoo.com,name:Phil');
         break;
@@ -46,9 +48,11 @@ if (null === $user) {
     <p>Cookie stored: <?php echo date('r', $storage->getTimestamp($name)); ?> 
     <ul>
         <li><a href="?do=update">Re-save cookie</a>
-        <li><a href="?do=shortCookie">Set short-lived cookie</a>
+        <li><a href="?do=shortCookie">Set short-lived cookie (reload after 10 seconds)</a>
         <li><a href="?do=tamper">Tamper with cookie</a>
     </ul>
-    <p>$_COOKIE[$name] == <code><?php echo htmlspecialchars($_COOKIE[$name]); ?></code></p>
+    <p>$_COOKIE['<?php echo $name; ?>'] == <code><?php echo htmlspecialchars($_COOKIE[$name]); ?></code></p>
+    <hr>
+    <p><a href="http://code.google.com/p/mrclay/source/browse/trunk/php/MrClay/CookieStorage/test.php">view PHP source</a></p>
 <?php
 }
