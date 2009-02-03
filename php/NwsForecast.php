@@ -142,14 +142,19 @@ class NwsForecast {
                 }
             } else {
                 foreach ($el->value as $val) {
-                    $times[$timeLayout][$i][$name] = (string)$val
-                        ? (false !== strpos((string)$val, '.')
+                    $val = (string)$val;
+                    if (preg_match('/^0(?:\\.0+)$/', $val)) {
+                        $val = 0;
+                    } elseif (preg_match('/^(?:|null)$/i', $val)) {
+                        $val = null;
+                    } else {
+                        $val = (false !== strpos((string)$val, '.'))
                             ? (float)$val
-                            : (int)$val
-                        )
-                        : null;
+                            : (int)$val;
+                    }
+                    $times[$timeLayout][$i][$name] = $val;
                     $i++;
-                }    
+                }
             }
         }
         
