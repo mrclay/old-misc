@@ -143,7 +143,7 @@ class MrClay_StringDebug {
      * 
      * @return string (X)HTML markup
      */
-    public function utf8Style()
+    public static function utf8Style()
     {
         return "<style type=\"text/css\">
 .utf8_debug {background:#000; color:#fff; padding:3px 1px 2px; line-height:1.7;}
