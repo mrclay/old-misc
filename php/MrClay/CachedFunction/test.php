@@ -41,11 +41,12 @@ last stale value.</p>
 sent to the client. This allows the refreshing client to receive immediate (stale) 
 output.</p>
 
-<pre>$func-&gt;getReturn() = <?php echo htmlspecialchars(var_export($func->getReturn(), 1)) ?></pre
+<pre>$func-&gt;getReturn() = <?php 
+    echo htmlspecialchars(var_export($func->getReturn(), 1));
+    ?></pre>
+
 <?
-
 header('Cache-Control: no-cache');
-
 // required to close the browser connection after sending output
 header('Content-Length: ' . ob_get_length());
 header('Connection: close');
