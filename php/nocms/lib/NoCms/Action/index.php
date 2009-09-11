@@ -35,6 +35,6 @@ class NoCms_Action_index extends NoCms_Action {
         return "<li><a title='edit' href='" . 
             h($this->htmlRoot . '/index.php/edit/' . $file)
             . "'>" . h($title) . "</a> <small>(" 
-            . h($formats[$ext]) . ")</small><li>";
+            . h($formats[$ext]) . ")</small></li>";
     }
 }

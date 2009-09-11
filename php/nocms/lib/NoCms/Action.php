@@ -21,4 +21,32 @@ class NoCms_Action {
         
         include './template.php';
     }
+    
+    public function getPost($key, $default = null)
+    {
+        return self::_getRequestVar($_POST, $key, $default);
+    }
+    
+    public function getGet($key, $default = null)
+    {
+        return self::_getRequestVar($_GET, $key, $default);
+    }
+    
+    private static function _getRequestVar($array, $key, $default)
+    {
+        if (! isset($array[$key])) {
+            return $default;
+        }
+        $val = $array[$key];
+        return get_magic_quotes_gpc()
+            ? self::_ssDeep($val)
+            : $val;
+    }
+    
+    private static function _ssDeep($value)
+    {
+        return is_array($value)
+            ? array_map(array('NoCms_Action', '_ssDeep'), $value) 
+            : stripslashes($value);
+    }
 }
