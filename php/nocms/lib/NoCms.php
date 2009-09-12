@@ -88,7 +88,7 @@ class NoCms {
             '@^/$@' => 'index'
             ,'@^/login$@' => 'login'
             ,'@^/logout$@' => 'logout'
-            ,'@^/show/(.+)$@' => 'show'
+            ,'@^/edit/(.+)$@' => 'edit'
         );
     }
 }

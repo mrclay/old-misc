@@ -13,6 +13,10 @@ class NoCms_Action_login extends NoCms_Action {
     
     public function POST()
     {
+        if (session_id() !== $this->getPost('sid')) {
+            $this->_nocms->redirect();
+            return;
+        }
         $auth = Zend_Auth::getInstance();
         $result = $auth->authenticate(
             new NoCms_AuthAdapter(
@@ -44,6 +48,7 @@ class NoCms_Action_login extends NoCms_Action {
                 <p><label>Password <input type='password' id='pwd' name='pwd' size='20'></label>
                   <input type='submit' value='Login'>
                   <input type='hidden' id='salt' name='salt' value='{$salt}'>
+                  <input type='hidden' name='sid' value='" . session_id() . "'>
                 </p>
             </form>
         ", 

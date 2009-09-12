@@ -1,18 +1,24 @@
 <?php
 
 $config = array(
-    'password' => ''
-    ,'passwordIsMd5' => false
+    'password' => '',
+    'passwordIsMd5' => false, // http://pajhome.org.uk/crypt/md5/
     
-    // removes <?  // <% 
-    ,'stripCode' => true
+    // # of previous versions to store
+    'numBackups' => 2,
     
-    // your user's site e.g. where this content appears
-    ,'siteHome' => dirname(dirname($_SERVER['SCRIPT_NAME'])) . '/'
+    // your user's site e.g. where the editable content appears
+    'siteName' => 'Example.com',
+    'siteHome' => dirname(dirname($_SERVER['SCRIPT_NAME'])) . '/',
     
     // ends with "../nocms"
-    ,'htmlRoot' => dirname($_SERVER['SCRIPT_NAME'])
-    ,'contentPath' => dirname(__FILE__) . '/content'
+    'htmlRoot' => dirname($_SERVER['SCRIPT_NAME']),
+    
+    // where editable content lives
+    'contentPath' => dirname(__FILE__) . DIRECTORY_SEPARATOR . 'content',
+    
+    // removes <?  // <% 
+    'stripCode' => true, // not implemented
 );
 
 return $config;

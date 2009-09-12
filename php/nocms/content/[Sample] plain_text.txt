@@ -1,0 +1,3 @@
+NoCms outputs UTF-8 so your text files must have this encoding.
+
+Hêllô Wôrld!

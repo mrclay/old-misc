@@ -14,7 +14,8 @@ class NoCms_Action {
     
     public function html($content, $beforeBodyEnd = '') {
         $title = $this->title;
-        $home = $this->_nocms->getConfig('siteHome');
+        $siteHome = $this->_nocms->getConfig('siteHome');
+        $siteName = $this->_nocms->getConfig('siteName');
         $htmlRoot = $this->htmlRoot;
         $actionRoot = $this->htmlRoot . '/index.php';
         $loggedIn = (bool)$this->_nocms->user;
