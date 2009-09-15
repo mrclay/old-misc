@@ -2,14 +2,14 @@
 
 $config = array(
     'password' => '',
-    'passwordIsMd5' => false, // http://pajhome.org.uk/crypt/md5/
+    'passwordIsMd5' => true, // http://pajhome.org.uk/crypt/md5/
     
     // # of previous versions to store
     'numBackups' => 2,
     
     // your user's site e.g. where the editable content appears
-    'siteName' => 'Example.com',
-    'siteHome' => dirname(dirname($_SERVER['SCRIPT_NAME'])) . '/',
+    'siteName' => $_SERVER['SERVER_NAME'],
+    'siteHome' => str_replace('//', '/', dirname(dirname($_SERVER['SCRIPT_NAME'])) . '/'),
     
     // ends with "../nocms"
     'htmlRoot' => dirname($_SERVER['SCRIPT_NAME']),
