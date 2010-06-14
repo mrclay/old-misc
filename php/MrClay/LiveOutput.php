@@ -7,114 +7,72 @@
  * 
  * The Good: Output is real-time so documentation never lies.
  * 
- * The Bad: Code has to appear twice in script (once in string, 2nd as argument) since
- * eval() modifies scope. It may be possible to implement this design using special
- * comments, then reading the file from disk to get the source.
+ * The Bad: Not an excuse for lack of unit tests, pretty limited documentation use.
  * 
- * The Ugly: Not an excuse for lack of unit tests, pretty limited documentation use.
- * 
- * Extend and override display() and/or displaySections() to alter markup/charset.
- * 
- * @todo Output sections as executed rather than storing return values
  * @todo Linked code blocks
  * 
- * Designed ~2005, minor PHP5 cleanup 2008-10-12
+ * Designed ~2005, minor PHP5 cleanup 2008-10-12,
+ * added renderer and processor 2010-06-14
  */
 class MrClay_LiveOutput {
 
     public $title = '';
+    public $renderer = null;
+    protected $_ob = false;
     
-    public function __construct($title = '')
+    public function __construct($title = '', MrClay_LiveOutput_Renderer $renderer = null)
     {
         $this->title = $title;
+        if (! $renderer) {
+            $renderer = new MrClay_LiveOutput_Renderer($title);
+        }
+        $this->renderer = $renderer;
     }
     
     public function codeRender($code, $return)
     {
-        return $this->_addBlock($code, $return, false, true);
+        $this->renderBlock($code, $return, false, true);
     }
     
     public function codeReturnRender($code, $return)
     {
-        return $this->_addBlock($code, $return, true, true);
+        $this->renderBlock($code, $return, true, true);
     }
     
     public function codeReturn($code, $return)
     {
-        return $this->_addBlock($code, $return, true, false);
+        $this->renderBlock($code, $return, true, false);
     }
     
     public function code($code, $return = true)
     {
-        return $this->_addBlock($code, $return, false, false);
+        $this->renderBlock($code, $return, false, false);
     }
-    
-    public function displaySections()
+
+    public function renderBlock($code, $return, $showReturn = false, $render = false)
     {
-        $toggle = true;
-        foreach ($this->_blocks as $block) {
-            echo "<div class='section'>\n"
-                ,"<div class='code'>\n"
-                ,self::_highlight($block['code'])
-                ,"\n</div>";
-            if ($block['showReturn']) {
-                echo "\n<h3>returns</h3><div class='produces'>\n"
-                    ,self::_highlight(var_export($block['return'], 1))
-                    ,"</div>";
-            }
-            if ($block['render'] && is_string($block['return'])) {
-                echo "\n<h3>rendering</h3>\n<div class='rendering'>\n"
-                    ,$block['return']
-                    ,"\n</div>\n";
-            }
-            echo "\n</div>\n";
+        if ($this->_ob) {
+            $this->renderer->html(ob_get_clean());
+            $this->_ob = false;
         }
+        $this->renderer->block($code, $return, $showReturn, $render);
     }
 
-    public function display()
+    public function ob_start()
     {
-        header('Content-Type: text/html; charset=utf-8');
-        
-        ?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
-"http://www.w3.org/TR/html4/loose.dtd">
-<head><title>Live output: <?php echo htmlspecialchars($this->title); ?></title>
-<style type="text/css">
-code {font-size:86%}
-.code {padding:10px; background-color:#ffd;}
-.section {padding:0 15px 15px; border:1px #fff solid; border-bottom:5px #000 solid; background:#eee}
-.rendering {padding:10px; background-color:#fff;}
-.produces {padding:10px; max-height:150px; overflow:auto;}
-h2, h3 {margin:10px 0}
-h1 small {color:#999;}
-</style>
-</head>
-<h1><small>Live output:</small> <?php echo htmlspecialchars($this->title); ?></h1>
-<?php echo $this->displaySections();
-    
+        ob_start();
+        $this->_ob = true;
     }
 
-    private function _addBlock($code, $return, $showReturn, $render)
+    public function html($html)
     {
-        $this->_blocks[] = array(
-            'code' => trim($code)
-            ,'return' => $return
-            ,'showReturn' => $showReturn
-            ,'render' => $render
-        );
-        return $return;
+        $this->renderer->html($html);
     }
-    
-    protected static function _highlight($php)
+
+    public static function processThis($title)
     {
-        $h = highlight_string("<?php {$php} ?>", 1);
-        $h = str_replace('<span style="color: #0000BB">&lt;?php&nbsp;','<span style="color: #0000BB">', $h);
-        $h = str_replace('<br />\'&nbsp;</span>', '\'</span>', $h);
-        $h = str_replace('?&gt;', '', $h);
-        $h = preg_replace('@<span [^>]*></span>@', '', $h);
-        $h = preg_replace('@ #([A-F\\d])\\1([A-F\\d])\\2([A-F\\d])\\3"@', '#$1$2$3"', $h);
-        return $h;
+        $stack = debug_backtrace();
+        $processor = new MrClay_LiveOutput_Processor($title);
+        $processor->process($stack[0]['file']);
     }
-    
-    protected $_blocks = array();
 }
-

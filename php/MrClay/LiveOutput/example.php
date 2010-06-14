@@ -1,6 +1,7 @@
 <?php
 
 require '../LiveOutput.php';
+require './Renderer.php';
 
 $to = new MrClay_LiveOutput('MrClay_Html highlights');
 
@@ -11,7 +12,11 @@ $to->code("
 \$html = new MrClay_Html;
 ");
 
+$to->ob_start(); ?>
 
+<p>Some inline HTML documentation.</p>
+
+<?php
 $to->code("
 \$assoc = array(
     array('id' => 2, 'first' => '<b>B</b>íll', 'last' => 'Gátës'),
@@ -152,6 +157,3 @@ $to->codeRender("
 ",
 $html->wrap($html->hwrap('He said & she said.','p'),'blockquote')
 );
-
-
-$to->display();
