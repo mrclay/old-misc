@@ -13,7 +13,9 @@ class MrClay_LiveOutput_Renderer {
     public function header()
     {
         $this->_headerSent = true;
-        header('Content-Type: text/html; charset=utf-8');
+        if (! headers_sent()) {
+            header('Content-Type: text/html; charset=utf-8');
+        }
         ?><!doctype html><title>Live output: <?php echo htmlspecialchars($this->title); ?></title>
 <style>
 code {font-size:86%}
@@ -24,9 +26,10 @@ code {font-size:86%}
 .html {padding:5px 10px; background: #fff;}
 h2, h3 {margin:10px 0}
 h1 small {color:#999;}
+p {margin:.7em 0;}
 </style>
 <body>
-<h1><small>Live output:</small> <?php echo htmlspecialchars($this->title); ?></h1>
+<h1><?php echo htmlspecialchars($this->title); ?></h1>
 <?php
         flush();
     }
@@ -65,10 +68,22 @@ h1 small {color:#999;}
         flush();
     }
 
-    public function html($html = '')
+    public function htmlForNextBlock($html = '')
     {
+        if (! $this->_headerSent) {
+            $this->header();
+        }
         echo "<div class=section><div class=html>$html</div>";
         flush();
         $this->_sectionOpened = true;
+    }
+
+    public function rawHtml($html = '')
+    {
+        if (! $this->_headerSent) {
+            $this->header();
+        }
+        echo $html;
+        flush();
     }
 }

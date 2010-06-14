@@ -51,28 +51,24 @@ class MrClay_LiveOutput {
 
     public function renderBlock($code, $return, $showReturn = false, $render = false)
     {
-        if ($this->_ob) {
-            $this->renderer->html(ob_get_clean());
-            $this->_ob = false;
-        }
         $this->renderer->block($code, $return, $showReturn, $render);
     }
 
-    public function ob_start()
+    public function htmlForNextBlock($html)
     {
-        ob_start();
-        $this->_ob = true;
+        $this->renderer->htmlForNextBlock($html);
     }
 
-    public function html($html)
-    {
-        $this->renderer->html($html);
-    }
-
-    public static function processThis($title)
+    public static function processThis($title = '')
     {
         $stack = debug_backtrace();
+        self::processFile($stack[0]['file']);
+    }
+
+    public static function processFile($file, $title = '')
+    {
         $processor = new MrClay_LiveOutput_Processor($title);
-        $processor->process($stack[0]['file']);
+        eval($processor->generatePhp($file));
+        exit();
     }
 }

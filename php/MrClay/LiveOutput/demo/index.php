@@ -1,9 +1,8 @@
 <?php
 
-require '../Html.php';
-require '../LiveOutput.php';
-require './Renderer.php';
-require './Processor.php';
+require_once '../../LiveOutput.php';
+require_once '../Renderer.php';
+require_once '../Processor.php';
 
 MrClay_LiveOutput::processThis('MrClay_Html highlights');
 // at this point LiveOutput fetches and tokenizes this file, cut offs everything
@@ -12,10 +11,21 @@ MrClay_LiveOutput::processThis('MrClay_Html highlights');
 
 #!begin
 
+/*! Multiline comments starting with <code>/*!</code> (not
+ * <a href="http://en.wikipedia.org/wiki/PHPDoc">DocBlocks</a>) are included as
+ * HTML.
+ */
+
+#!desc Each "#!desc" command is placed in a <p> element properly escaped for HTML.
 
 #!code
+require '../../Html.php';
 $html = new MrClay_Html;
 
+// normal comments shows up as part of code
+#!
+// ...but not after #!
+/* Multiline comment */
 
 #!code
 $assoc = array(
@@ -28,9 +38,9 @@ $assoc = array(
 // non-string values are passed through \$html->stringify()
 $html->build_table_from_assoc_array($assoc);
 
+?><p>Here we'll make a custom function that will be called to convert non-strings to strings.</p><?php
 
 #!code
-?><p>Here we'll make a custom function that will be called to convert non-strings to strings.</p><?php
 // custom stringify func
 function myStringify($var) {
     return $var ? '<i>truthy</i>' : '<b>falsey</b>';
@@ -89,4 +99,8 @@ $html->wrap(
     $html->hwrap('He said & she said.', 'p') // hwrap does
     ,'blockquote'
 );
+#!
 
+#!html <p style="text-align:right"><small>Rendering by
+#!html  <a href="http://code.google.com/p/mrclay/source/browse/trunk/php/MrClay/LiveOutput.php">
+#!html LiveOutput</a> by <a href="http://mrclay.org/">Steve Clay</a></small></p>
