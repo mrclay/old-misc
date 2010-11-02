@@ -1,69 +1,97 @@
+WHAT IS "QAD"?
+
 QAD is a set of classes to enable the creation of a "quick and dirty" Zend
 Framework app within a single file without changing how the controllers/views
-work too much. Consider it an alpha proof of concept. Ideally something created
-this way can be trivially turned into a full ZF app if need be.
+work too much. Zend_View is simply extended to support using a callback function
+to render output before using a script include.
 
-The view and layout classes use function calls to render output instead of
-script includes. E.g. this could be in a single file:
+Consider it an alpha proof of concept. Ideally something created this way can be
+trivially turned into a full ZF app if need be.
 
-----
 
-    // setup autoloading ...
+EXAMPLE SCRIPT
 
-    // define controller(s)
-    // (if you need more than one you probably should not be using this)
+    // setup autoload...
 
+    // any controllers not defined before $app->run() will be loaded from
+    // $app->options['controllersPath']
     class IndexController extends Zend_Controller_Action {
 
-        // handles /
-        public function indexAction()
-        {
-            $this->view->hello = ', World!';
-        }
+        public function indexAction() {}      // handles /
 
-        // handles /there
-        public function thereAction()
-        {
-            $this->view->hello = ' there!';
-            $this->render('index'); // use index's view
-        }
+        public function hyphenAtedAction() {} // handles /hyphen-ated
     }
 
-    // define (optional) view functions
-
+    // missing views will be fetched from $app->options['viewsPath']
     function view_index_index(Zend_View $view) {
-        echo "Hello" . $view->escape($view->hello);
+        echo "Hello";
+    }
+    function view_index_hyphen__ated(Zend_View $view) {
+        echo "World!";
+    }
+
+    // missing layouts will be fetched from $app->options['layoutPath']
+    function layout_layout($view) {
+        echo $view->render('header.phtml'); // use script names...
+        echo $view->layout()->content;
+        echo $view->render('the-footer.phtml');
+    }
+    function layout_header(Zend_View $view) {
+        echo "header!<br>";
+    }
+    function layout_the__footer(Zend_View $view) {
+        echo "<br>the footer!";
     }
 
     $app = new MrClay_QAD_App();
+    $app->controllerInvokeArgs['displayExceptions'] = true;
     $app->run();
 
-----
 
-Notice "/there" calls the index controller. This is because, by default, QAD
-prepends the pathInfo of the request with "/index". You can disable this:
+
+NOTES
+
+Notice "/hyphen-ated" calls the index controller. This is because, by default,
+QAD prepends the pathInfo of the request with "/index". You can disable this:
 
     $app = new MrClay_QAD_App(array('prependPathInfo' => ''));
 
-You can also allow displaying exception traces in the default error controller:
+If you don't define ErrorController or view_error_error() before running the app,
+QAD creates them at runtime based on MrClay_QAD_ErrorController(::defaultView).
 
-    $app->controllerInvokeArgs['displayExceptions'] = true;
+The $options passed into MrClay_QAD_App's constructor allow you to:
 
-BTW, if you don't define ErrorController before running the app, QAD creates
-one at runtime extending MrClay_QAD_ErrorController.
+  * disable layout (useLayout = false)
+  * specify a callback for layout (layoutCallback = 'my_layout')
+  * change the prefixes used to lookup view/layout functions
+  * throw exception if view is missing (requireViews = true)
 
-----
 
-The app injects custom views and layouts into the controllers, that behave
-mostly identically to Zend_View and Zend_Layout until the rendering stage.
+IMPLEMENTATION
 
-MrClay_QAD_View converts the script name it's given (e.g. "foo/bar.phtml")
-into a function name "view_foo_bar". If the function exists, it captures the
-output from it, passing the view in as an argument. If the function is missing,
-it tries regular script rendering, looking for scripts in the ./views/scripts
-directory (path from the executing script)
+Into the front controller and layout objects, the app injects custom views which
+behave mostly identically to Zend_View until the rendering stage.
 
-MrClay_QAD_Layout similarly renders the output of a callback function.
+In render(), MrClay_QAD_View uses a callback resolver to convert a script name
+like "foo/bar-ding.phtml" into a callback function like "view_foo_bar__ding".
+If callable, the function is called and render() captures the output from it,
+passing the view in as an argument.
 
-You can also create a ./controllers directory and put controllers there and the
-Zend dispatcher will check there for them.
+If the function is missing, it tries the regular script rendering of Zend_View,
+looking for scripts in the your 'viewsPath' directory.
+
+
+APP DIRECTORIES
+
+Though no directories are required, QAD will sniff out missing controllers,
+views, and layout scripts, assuming a typical ZF directory setup:
+
+/application
+   /controllers
+   /views/scripts
+   /layout/scripts
+/public
+   index.php  <-- your script
+   .htaccess  <-- use standard mod_rewrite rules for nicer URLs
+
+In $options, you can customize all these paths if you wish.
