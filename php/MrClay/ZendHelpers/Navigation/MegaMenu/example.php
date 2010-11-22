@@ -1,7 +1,8 @@
 <?php
 die();
 
-// setup your autoloading here...
+// setup your autoloading...
+require '../../../../lib/autoload.php';
 
 $menu = new Zend_Navigation(array(
 
@@ -21,8 +22,8 @@ $menu = new Zend_Navigation(array(
             'id' => 'myUlId',
             'class' => 'myUlClass',
         ),
-        'beforeUl' => "Hello World!", // optional HTML placed before the child UL
-        'afterUl' => "Goobdye World!", // optional HTML after the child UL
+        'beforeUl' => "<div>Hello World!", // optional HTML placed before the child UL
+        'afterUl' => "Goobdye World!</div>", // optional HTML after the child UL
         'pages' => array(
 
             array(
@@ -67,6 +68,12 @@ $menu = new Zend_Navigation(array(
             ),
 
         ),
+    ),
+
+    array(
+        'uri' => '#', // required
+        'label' => 'Login', // required
+        'beforeUl' => '<form><div>e-mail <input /></div><div>password <input /></div></form>',
     ),
 
 ));

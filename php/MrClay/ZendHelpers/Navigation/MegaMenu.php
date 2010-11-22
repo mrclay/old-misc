@@ -188,14 +188,22 @@ class MrClay_ZendHelpers_Navigation_MegaMenu
         }
         $html = '<li' . $this->_htmlAttribs($liAttrs) . '>' . $this->htmlify($page);
 
+        $beforeUl = $page->get('beforeUl');
+        $afterUl = $page->get('afterUl');
+        if (! empty($this->listWrappersByDepth[$depth + 1])) {
+            $beforeUl = "<div class=\"{$this->listWrappersByDepth[$depth + 1]}\">" . $beforeUl;
+            $afterUl .= '</div>';
+        }
+        $html .= $beforeUl;
+
         // render sublist
-        unset($liAttrs); // save a little mem while recursing
+        unset($liAttrs, $beforeUl); // save a little mem while recursing
 
         if ($subpages = $page->getPages()) {
             $html .= $this->_renderSubmenu($page, $subpages, $isActiveBranch, $depth);
         }
 
-        return $html . '</li>';
+        return $html . $afterUl . '</li>';
     }
 
     /**
@@ -208,12 +216,6 @@ class MrClay_ZendHelpers_Navigation_MegaMenu
     protected function _renderSubmenu(Zend_Navigation_Page $page, $subpages, $isActiveBranch, $depth)
     {
         $html = '';
-        $beforeUl = $page->get('beforeUl');
-        $afterUl = $page->get('afterUl');
-        if (! empty($this->listWrappersByDepth[$depth + 1])) {
-            $beforeUl = "<div class=\"{$this->listWrappersByDepth[$depth + 1]}\">" . $beforeUl;
-            $afterUl .= '</div>';
-        }
 
         // allow page to set list attributes
         if (! is_array($ulAttrs = $page->get('ulAttrs'))) {
@@ -222,7 +224,7 @@ class MrClay_ZendHelpers_Navigation_MegaMenu
         if (! empty($this->listClassesByDepth[$depth + 1])) {
             $this->_appendClass($ulAttrs, $this->listClassesByDepth[$depth + 1]);
         }
-        $html = $beforeUl . '<ul' . $this->_htmlAttribs($ulAttrs) . '>';
+        $html = '<ul' . $this->_htmlAttribs($ulAttrs) . '>';
 
         unset($ulAttrs, $beforeUl); // save a little mem while recursing
 
@@ -230,7 +232,7 @@ class MrClay_ZendHelpers_Navigation_MegaMenu
             $html .= $this->_renderPageAndSubmenu($subpage, $isActiveBranch, $depth + 1);
         }
 
-        return $html . "</ul>" . $afterUl;
+        return $html . "</ul>";
     }
 
     protected function _renderActivePage(Zend_Navigation_Page $page)
