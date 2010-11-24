@@ -251,7 +251,8 @@ class MrClay_ZendHelpers_Navigation_MegaMenu
         $attribs = array(
             'id'     => $page->getId(),
             'title'  => $title,
-            'class'  => $page->getClass()
+            'class'  => $page->getClass(),
+            'style'  => $page->get('style'),
         );
 
         // does page have a href?
