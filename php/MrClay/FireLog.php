@@ -5,25 +5,48 @@
  * FirePHP class. I.e. without managing request/response objects and flushing the
  * Wildfire channel.
  *
- * When you call send()/group()/groupEnd(), the arguments are passed to the same static
- * method on Zend_Wildfire_Plugin_FirePhp, then the channel is flushed to an extended
- * version of Zend_Controller_Response_Http that calls header() immediately.
- * 
+ * FireLog does two things: 1. It proxies Zend_Log method calls to an internal
+ * Zend_Log. 2. It proxies the send, group, and groupEnd methods of
+ * Zend_Wildfire_Plugin_FirePhp. In both cases the headers are set immediately.
+ *
  * <code>
- * MrClay_Firephp::getInstance()->send($myVariable);
+ * $log = MrClay_FireLog::getInstance();
+ *
+ * // Zend_Log methods
+ * $log->info('An informational message.');
+ * $log->warn('A warning!');
+ * 
+ * // Zend_Wildfire_Plugin_FirePhp methods
+ * $log->group('My Group');
+ * $log->send('Hello from the group.');
+ * $log->groupEnd();
  * </code>
  */
-class MrClay_Firephp {
+class MrClay_FireLog {
 
+    /**
+     * @var Zend_Wildfire_Channel_HttpHeaders
+     */
     protected $_channel;
+
+    /**
+     * @var Zend_Log
+     */
+    protected $_log;
 
     protected function __construct()
     {
         $this->_channel = Zend_Wildfire_Channel_HttpHeaders::getInstance();
-        $this->_channel->setResponse(new MrClay_Firephp_Response());
+        $this->_channel->setResponse(new MrClay_FireLog_Response());
         $this->_channel->setRequest(new Zend_Controller_Request_Http());
+        $writer = new MrClay_FireLog_Writer();
+        $writer->setWildfireChannel($this->_channel);
+        $this->_log = new Zend_Log($writer);
     }
 
+    /**
+     * @return MrClay_FireLog
+     */
     public static function getInstance()
     {
         static $instance = null;
@@ -31,6 +54,21 @@ class MrClay_Firephp {
             $instance = new self();
         }
         return $instance;
+    }
+
+    /**
+     * Proxy calls back to Zend_Log
+     */
+    public function __call($name, $arguments) {
+        call_user_func_array(array($this->_log, $name), $arguments);
+    }
+
+    /**
+     * @return Zend_Log
+     */
+    public function getLog()
+    {
+        return $this->_log;
     }
 
     /**
@@ -69,7 +107,7 @@ class MrClay_Firephp {
      *
      * @return TRUE if the group instruction was added to the response headers or buffered.
      */
-    public static function groupEnd()
+    public function groupEnd()
     {
         $r = Zend_Wildfire_Plugin_FirePhp::groupEnd();
         $this->_channel->flush();
