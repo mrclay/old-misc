@@ -16,13 +16,13 @@
  */
 class Coewp_MenuFilter {
 
-	/**
-	 * Add this filter to WordPress's wp_nav_menu hook
-	 */
-	public static function add()
-	{
-		add_filter('wp_nav_menu', array('Coewp_MenuFilter', 'staticFilter'));
-	}
+    /**
+     * Add this filter to WordPress's wp_nav_menu hook
+     */
+    public static function add()
+    {
+        add_filter('wp_nav_menu', array('Coewp_MenuFilter', 'staticFilter'));
+    }
 
 	/**
      * Filter menu removing submenus in inactive branches. This static version
