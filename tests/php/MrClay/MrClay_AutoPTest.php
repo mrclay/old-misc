@@ -18,7 +18,7 @@ class MrClay_AutoPTest extends PHPUnit_Framework_TestCase {
     }
 
     
-    public function testDomRoundtrip()
+    /*public function testDomRoundtrip()
     {
         $d = dir(__DIR__ . '/AutoP');
         $in = file_get_contents($d->path . "/domdoc_in.html");
@@ -35,7 +35,7 @@ class MrClay_AutoPTest extends PHPUnit_Framework_TestCase {
         list($out) = explode('</body>', $out, 2);
 
         $this->assertEquals($exp, $out, "DOMDocument's parsing/serialization roundtrip");
-    }
+    }*/
 
     
     public function testInOut()
@@ -47,6 +47,8 @@ class MrClay_AutoPTest extends PHPUnit_Framework_TestCase {
                 $tests[] = $m[1];
             }
         }
+
+        //$tests = array("3"); // force a single test
 
         foreach ($tests as $test) {
             $in = file_get_contents($d->path . '/' . "{$test}_in.html");

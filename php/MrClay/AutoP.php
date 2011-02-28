@@ -80,9 +80,12 @@ class MrClay_AutoP {
         // normalize whitespace
         $html = str_replace(array("\r\n", "\r"), "\n", $html);
 
+        // allows preserving entities untouched
+        $html = str_replace('&', $this->_tokenPrefix . 'AMP', $html);
+
         // parse to DOM, suppressing loadHTML warnings http://www.php.net/manual/en/domdocument.loadhtml.php#95463
         $this->_doc = new DOMDocument();
-        
+       
         if (! $this->_parseBodyContent($html, $this->_doc, $this->encoding)) {
             return false;
         }
@@ -156,6 +159,7 @@ class MrClay_AutoP {
         $html = str_replace('<autop>', "\n<p>", $html);
         $html = str_replace('</autop>', "</p>\n", $html);
         $html = str_replace('<br>', '<br />', $html);
+        $html = str_replace($this->_tokenPrefix . 'AMP', '&', $html);
         return $html;
     }
 
