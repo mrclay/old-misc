@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Create wrapper P and BR elements in HTML depending on newlines. Good for
- * processing user content which replies on double newlines to signal a new
- * paragraph. In all cases output should be well-formed markup.
+ * Create wrapper P and BR elements in HTML depending on newlines. Useful when
+ * users use newlines to signal line and paragraph breaks. In all cases output
+ * should be well-formed markup.
  *
  * In DIV, LI, TD, and TH elements, Ps are only added when their would be at
  * least two of them.
@@ -55,9 +55,9 @@ class MrClay_AutoP {
     }
 
     /**
-     * Create wrapper P and BR elements in HTML depending on newlines. Good for
-     * processing user content which replies on double newlines to signal a new
-     * paragraph. In all cases output should be well-formed markup.
+     * Create wrapper P and BR elements in HTML depending on newlines. Useful when
+     * users use newlines to signal line and paragraph breaks. In all cases output
+     * should be well-formed markup.
      *
      * In DIV, LI, TD, and TH elements, Ps are only added when their would be at
      * least two of them.
