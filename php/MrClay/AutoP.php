@@ -9,7 +9,7 @@
  * least two of them.
  *
  * @author Steve Clay <steve@mrclay.org>
- * @license    http://www.opensource.org/licenses/mit-license.php  MIT License
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  *
  */
 class MrClay_AutoP {
@@ -38,14 +38,14 @@ class MrClay_AutoP {
      *
      * @var array
      */
-    protected $_descendList = 'body|form|div|dd|dl|blockquote|td|th|li|ul|section|article|aside|header|footer|details';
+    protected $_descendList = 'a|body|form|div|dd|dl|blockquote|td|th|li|ul|ol|section|article|aside|header|footer|details';
 
     /**
      * Add Ps inside these elements
      *
      * @var array
      */
-    protected $_alterList = 'body|form|div|dd|blockquote|td|th|li|section|article|aside|header|footer|details';
+    protected $_alterList = 'a|body|form|div|dd|blockquote|td|th|li|section|article|aside|header|footer|details';
 
     /**
      * In these elements, remove AUTOP if there's only one
@@ -54,14 +54,14 @@ class MrClay_AutoP {
      */
     protected $_requireMultipleQuery = '//li | //div | //th | //td';
 
-    protected $_tokenPrefix = '';
+    protected $_unique = '';
 
     public function __construct()
     {
         $this->_blocks = explode('|', implode('', $this->_blocks));
         $this->_descendList = explode('|', $this->_descendList);
         $this->_alterList = explode('|', $this->_alterList);
-        $this->_tokenPrefix = md5(microtime(true));
+        $this->_unique = md5(__FILE__);
     }
 
     /**
@@ -81,7 +81,7 @@ class MrClay_AutoP {
         $html = str_replace(array("\r\n", "\r"), "\n", $html);
 
         // allows preserving entities untouched
-        $html = str_replace('&', $this->_tokenPrefix . 'AMP', $html);
+        $html = str_replace('&', $this->_unique . 'AMP', $html);
 
         // parse to DOM, suppressing loadHTML warnings http://www.php.net/manual/en/domdocument.loadhtml.php#95463
         $this->_doc = new DOMDocument();
@@ -89,13 +89,6 @@ class MrClay_AutoP {
         if (! $this->_parseBodyContent($html, $this->_doc, $this->encoding)) {
             return false;
         }
-        /*
-        libxml_use_internal_errors(true);
-        if (! @$this->_doc->loadHTML("<html><meta http-equiv='content-type' content='text/html; charset={$this->encoding}'><body>"
-                . $html . '</body></html>')) {
-            return false;
-        }
-        */
 
         $this->_xpath = new DOMXPath($this->_doc);
         // start processing recursively at the BODY element
@@ -106,8 +99,8 @@ class MrClay_AutoP {
         $html = $this->_serializeBodyFragment($this->_doc);
 
         // split AUTOPs into multiples at /\n\n+/
-        $html = preg_replace('/(' . $this->_tokenPrefix . 'NL){2,}/', '</autop><autop>', $html);
-        $html = str_replace(array($this->_tokenPrefix . 'BR', $this->_tokenPrefix . 'NL', '<br>'), '<br />', $html);
+        $html = preg_replace('/(' . $this->_unique . 'NL){2,}/', '</autop><autop>', $html);
+        $html = str_replace(array($this->_unique . 'BR', $this->_unique . 'NL', '<br>'), '<br />', $html);
         $html = str_replace('<br /></autop>', '</autop>', $html);
 
         // re-parse so we can handle new AUTOP elements
@@ -156,11 +149,41 @@ class MrClay_AutoP {
 
         $html = $this->_serializeBodyFragment($this->_doc);
 
+        // commit to converting AUTOPs to Ps
         $html = str_replace('<autop>', "\n<p>", $html);
         $html = str_replace('</autop>', "</p>\n", $html);
+        
         $html = str_replace('<br>', '<br />', $html);
-        $html = str_replace($this->_tokenPrefix . 'AMP', '&', $html);
+        $html = str_replace($this->_unique . 'AMP', '&', $html);
         return $html;
+    }
+
+    /**
+     * Should the element be treated as block-level? For A elements, it depends
+     * if the element contains other block-levels (HTML5)
+     * 
+     * @param DOMNode $node
+     * @return bool
+     */
+    protected function _isBlock(DOMNode $node)
+    {
+        if ($node->nodeType !== XML_ELEMENT_NODE) {
+            return false;
+        }
+        $name = strtolower($node->nodeName);
+        if ($name === 'a') {
+            // (sigh) must check for block level descendants, thanks HTML5
+            $containsBlock = false;
+            foreach ($node->childNodes as $child) {
+                if ($child->nodeType === XML_ELEMENT_NODE
+                    && in_array(strtolower($child->nodeName), $this->_blocks)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return in_array($name, $this->_blocks);
+        }
     }
 
     /**
@@ -173,54 +196,59 @@ class MrClay_AutoP {
         // if true, we can alter all child nodes, if not, we'll just call
         // _addParagraphs on each element in the descendInto list
         $alterInline = in_array(strtolower($el->nodeName), $this->_alterList);
-        
-        $inFirstWhitespace = true;
-        $blocks = array();
+
+        // inside affected elements, we want to trim leading whitespace from
+        // the first text node
+        $ltrimFirstTextNode = true;
+
+        // should we open a new AUTOP element to move inline elements into?
         $openP = true;
-        $p = null;
-        $ignoreLeadingNewline = false;
+        $autop = null;
+
+        // after BR, ignore a newline
+        $isFollowingBr = false;
+
         $node = $el->firstChild;
         while (null !== $node) {
             if ($alterInline) {
                 if ($openP) {
                     $openP = false;
                     // create a P to move inline content into (this may be removed later)
-                    $p = $el->insertBefore($this->_doc->createElement('autop'), $node);
+                    $autop = $el->insertBefore($this->_doc->createElement('autop'), $node);
                 }
             }
 
             $isElement = ($node->nodeType === XML_ELEMENT_NODE);
-            $isBlock = $isElement && in_array(strtolower($node->nodeName), $this->_blocks);
+            $isBlock = $isElement && $this->_isBlock($node);
 
             if ($alterInline) {
                 $isInline = $isElement && ! $isBlock;
                 $isText = ($node->nodeType === XML_TEXT_NODE);
                 $isLastInline = (! $node->nextSibling
-                               || ($node->nextSibling->nodeType === XML_ELEMENT_NODE
-                                   && in_array(strtolower($node->nextSibling->nodeValue), $this->_blocks)
-                               ));
+                               || $this->_isBlock($node->nextSibling));
 
                 if ($isElement) {
-                    $ignoreLeadingNewline = ($node->nodeValue === 'BR');
+                    $isFollowingBr = (strtolower($node->nodeName) === 'br');
                 }
 
                 if ($isText) {
                     $nodeText = $node->nodeValue;
-                    if ($inFirstWhitespace) {
+                    if ($ltrimFirstTextNode) {
                         $nodeText = ltrim($nodeText);
-                        $inFirstWhitespace = false;
+                        $ltrimFirstTextNode = false;
                     }
-                    if (substr($nodeText, 0, 1) === "\n" && $ignoreLeadingNewline) {
-                        $nodeText = substr($nodeText, 1);
+                    if ($isFollowingBr && preg_match('@^[ \\t]*\\n[ \\t]*@', $nodeText, $m)) {
+                        // if a user ends a line with <br>, don't add a second BR
+                        $nodeText = substr($nodeText, strlen($m[0]));
                     }
                     if ($isLastInline) {
                         $nodeText = rtrim($nodeText);
                     }
-                    $nodeText = str_replace("\n", $this->_tokenPrefix . 'NL', $nodeText);
-                    $p->appendChild($this->_doc->createTextNode($nodeText));
-                    $curr = $node;
+                    $nodeText = str_replace("\n", $this->_unique . 'NL', $nodeText);
+                    $autop->appendChild($this->_doc->createTextNode($nodeText));
+                    $tmpNode = $node;
                     $node = $node->nextSibling;
-                    $el->removeChild($curr);
+                    $el->removeChild($tmpNode);
                     continue;
                 }
             }
@@ -232,16 +260,16 @@ class MrClay_AutoP {
                     }
                 }
                 $openP = true;
-                $inFirstWhitespace = true;
+                $ltrimFirstTextNode = true;
             }
             if ($alterInline) {
                 if (! $isBlock) {
-                    $curr = $node;
+                    $tmpNode = $node;
                     if ($isElement) {
-                        $this->_handleInline($curr);
+                        $this->_handleInline($tmpNode);
                     }
                     $node = $node->nextSibling;
-                    $p->appendChild($curr);
+                    $autop->appendChild($tmpNode);
                     continue;
                 }
             }
@@ -250,6 +278,11 @@ class MrClay_AutoP {
         }
     }
 
+    /**
+     * Turn newlines in inline elements into BRs
+     *
+     * @param DOMElement $el
+     */
     protected function _handleInline(DOMElement $el)
     {
         $ignoreLeadingNewline = false;
@@ -269,7 +302,7 @@ class MrClay_AutoP {
                     $text = substr($text, 1);
                     $ignoreLeadingNewline = false;
                 }
-                $node->nodeValue = str_replace("\n", $this->_tokenPrefix . 'BR', $text);
+                $node->nodeValue = str_replace("\n", $this->_unique . 'BR', $text);
             }
         }
     }
