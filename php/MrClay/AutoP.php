@@ -45,14 +45,14 @@ class MrClay_AutoP {
      *
      * @var array
      */
-    protected $_alterList = 'a|body|form|div|dd|blockquote|td|th|li|section|article|aside|header|footer|details';
+    protected $_alterList = 'a|body|div|dd|blockquote|td|section|article|aside|header|footer|details';
 
     /**
      * In these elements, remove AUTOP if there's only one
      *
      * @var array
      */
-    protected $_requireMultipleQuery = '//li | //div | //th | //td';
+    protected $_requireMultipleQuery = '//div | //td';
 
     protected $_unique = '';
 
