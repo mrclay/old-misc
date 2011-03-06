@@ -5,7 +5,7 @@
  * users use newlines to signal line and paragraph breaks. In all cases output
  * should be well-formed markup.
  *
- * In DIV, LI, TD, and TH elements, Ps are only added when their would be at
+ * In DIV elements, Ps are only added when their would be at
  * least two of them.
  *
  * @author Steve Clay <steve@mrclay.org>
@@ -38,21 +38,14 @@ class MrClay_AutoP {
      *
      * @var array
      */
-    protected $_descendList = 'a|body|form|div|dd|dl|blockquote|td|th|li|ul|ol|section|article|aside|header|footer|details';
+    protected $_descendList = 'body|form|div|blockquote|section|article|aside|header|footer|details';
 
     /**
      * Add Ps inside these elements
      *
      * @var array
      */
-    protected $_alterList = 'a|body|div|dd|blockquote|td|section|article|aside|header|footer|details';
-
-    /**
-     * In these elements, remove AUTOP if there's only one
-     *
-     * @var array
-     */
-    protected $_requireMultipleQuery = '//div | //td';
+    protected $_alterList = 'body|div|blockquote|section|article|aside|header|footer|details';
 
     protected $_unique = '';
 
@@ -83,10 +76,12 @@ class MrClay_AutoP {
         // allows preserving entities untouched
         $html = str_replace('&', $this->_unique . 'AMP', $html);
 
-        // parse to DOM, suppressing loadHTML warnings http://www.php.net/manual/en/domdocument.loadhtml.php#95463
         $this->_doc = new DOMDocument();
        
-        if (! $this->_parseBodyContent($html, $this->_doc, $this->encoding)) {
+        // parse to DOM, suppressing loadHTML warnings http://www.php.net/manual/en/domdocument.loadhtml.php#95463
+        libxml_use_internal_errors(true);
+        if (! @$this->_doc->loadHTML("<html><meta http-equiv='content-type' content='text/html; charset={$this->encoding}'><body>"
+                . $html . '</body></html>')) {
             return false;
         }
 
@@ -96,7 +91,7 @@ class MrClay_AutoP {
         $this->_addParagraphs($nodeList->item(0));
 
         // serialize back to HTML
-        $html = $this->_serializeBodyFragment($this->_doc);
+        $html = $this->_doc->saveHTML();
 
         // split AUTOPs into multiples at /\n\n+/
         $html = preg_replace('/(' . $this->_unique . 'NL){2,}/', '</autop><autop>', $html);
@@ -105,7 +100,7 @@ class MrClay_AutoP {
 
         // re-parse so we can handle new AUTOP elements
 
-        if (! $this->_parseBodyContent($html, $this->_doc, $this->encoding)) {
+        if (! @$this->_doc->loadHTML($html)) {
             return false;
         }
         // must re-create XPath object after DOM load
@@ -125,29 +120,30 @@ class MrClay_AutoP {
                 }
             }
             if (! $hasContent) {
-                // it's "empty", but move children out before deleting
-                $parent = $autop->parentNode;
-                while (null !== ($node = $autop->firstChild)) {
-                    $parent->insertBefore($node, $autop);
-                }
-                $parent->removeChild($autop);
+                // strip w/ preg_replace later (faster than moving nodes out)
+                $autop->setAttribute("r", "1");
             }
         }
 
         // remove a single AUTOP inside certain elements
-        foreach ($this->_xpath->query($this->_requireMultipleQuery) as $el) {
+        
+        foreach ($this->_xpath->query('//div') as $el) {
             $autops = $this->_xpath->query('./autop', $el);
             if ($autops->length === 1) {
-                // only on AUTOP inside, move children out and delete it
-                $autop = $autops->item(0);
-                while (null !== ($node = $autop->firstChild)) {
-                    $el->insertBefore($node, $autop);
-                }
-                $el->removeChild($autop);
+                // strip w/ preg_replace later (faster than moving nodes out)
+                $autops->item(0)->setAttribute("r", "1");
             }
         }
-
-        $html = $this->_serializeBodyFragment($this->_doc);
+        
+        $html = $this->_doc->saveHTML();
+        
+        // trim to the contents of BODY
+        $bodyStart = strpos($html, '<body>');
+        $bodyEnd = strpos($html, '</body>', $bodyStart + 6);
+        $html = substr($html, $bodyStart + 6, $bodyEnd - $bodyStart - 6);
+        
+        // strip AUTOPs that should be removed
+        $html = preg_replace('@<autop r="1">(.*?)</autop>@', '\\1', $html);
 
         // commit to converting AUTOPs to Ps
         $html = str_replace('<autop>', "\n<p>", $html);
@@ -159,182 +155,131 @@ class MrClay_AutoP {
     }
 
     /**
-     * Should the element be treated as block-level? For A elements, it depends
-     * if the element contains other block-levels (HTML5)
-     * 
-     * @param DOMNode $node
-     * @return bool
-     */
-    protected function _isBlock(DOMNode $node)
-    {
-        if ($node->nodeType !== XML_ELEMENT_NODE) {
-            return false;
-        }
-        $name = strtolower($node->nodeName);
-        if ($name === 'a') {
-            // (sigh) must check for block level descendants, thanks HTML5
-            $containsBlock = false;
-            foreach ($node->childNodes as $child) {
-                if ($child->nodeType === XML_ELEMENT_NODE
-                    && in_array(strtolower($child->nodeName), $this->_blocks)) {
-                    return true;
-                }
-            }
-            return false;
-        } else {
-            return in_array($name, $this->_blocks);
-        }
-    }
-
-    /**
      * Add P and BR elements as necessary
      *
      * @param DOMElement $el
      */
     protected function _addParagraphs(DOMElement $el)
     {
-        // if true, we can alter all child nodes, if not, we'll just call
-        // _addParagraphs on each element in the descendInto list
-        $alterInline = in_array(strtolower($el->nodeName), $this->_alterList);
+        // no need to recurse, just queue up
+        $elsToProcess = array($el);
+        $inlinesToProcess = array();
+        while ($el = array_shift($elsToProcess)) {
+            // if true, we can alter all child nodes, if not, we'll just call
+            // _addParagraphs on each element in the descendInto list
+            $alterInline = in_array($el->nodeName, $this->_alterList);
 
-        // inside affected elements, we want to trim leading whitespace from
-        // the first text node
-        $ltrimFirstTextNode = true;
+            // inside affected elements, we want to trim leading whitespace from
+            // the first text node
+            $ltrimFirstTextNode = true;
 
-        // should we open a new AUTOP element to move inline elements into?
-        $openP = true;
-        $autop = null;
+            // should we open a new AUTOP element to move inline elements into?
+            $openP = true;
+            $autop = null;
 
-        // after BR, ignore a newline
-        $isFollowingBr = false;
+            // after BR, ignore a newline
+            $isFollowingBr = false;
 
-        $node = $el->firstChild;
-        while (null !== $node) {
-            if ($alterInline) {
-                if ($openP) {
-                    $openP = false;
-                    // create a P to move inline content into (this may be removed later)
-                    $autop = $el->insertBefore($this->_doc->createElement('autop'), $node);
+            $node = $el->firstChild;
+            while (null !== $node) {
+                if ($alterInline) {
+                    if ($openP) {
+                        $openP = false;
+                        // create a P to move inline content into (this may be removed later)
+                        $autop = $el->insertBefore($this->_doc->createElement('autop'), $node);
+                    }
                 }
-            }
 
-            $isElement = ($node->nodeType === XML_ELEMENT_NODE);
-            $isBlock = $isElement && $this->_isBlock($node);
-
-            if ($alterInline) {
-                $isInline = $isElement && ! $isBlock;
-                $isText = ($node->nodeType === XML_TEXT_NODE);
-                $isLastInline = (! $node->nextSibling
-                               || $this->_isBlock($node->nextSibling));
-
+                $isElement = ($node->nodeType === XML_ELEMENT_NODE);
                 if ($isElement) {
-                    $isFollowingBr = (strtolower($node->nodeName) === 'br');
+                    $elName = $node->nodeName;
                 }
+                $isBlock = ($isElement && in_array($elName, $this->_blocks));
 
-                if ($isText) {
-                    $nodeText = $node->nodeValue;
-                    if ($ltrimFirstTextNode) {
-                        $nodeText = ltrim($nodeText);
-                        $ltrimFirstTextNode = false;
-                    }
-                    if ($isFollowingBr && preg_match('@^[ \\t]*\\n[ \\t]*@', $nodeText, $m)) {
-                        // if a user ends a line with <br>, don't add a second BR
-                        $nodeText = substr($nodeText, strlen($m[0]));
-                    }
-                    if ($isLastInline) {
-                        $nodeText = rtrim($nodeText);
-                    }
-                    $nodeText = str_replace("\n", $this->_unique . 'NL', $nodeText);
-                    $autop->appendChild($this->_doc->createTextNode($nodeText));
-                    $tmpNode = $node;
-                    $node = $node->nextSibling;
-                    $el->removeChild($tmpNode);
-                    continue;
-                }
-            }
-            if ($isBlock || ! $node->nextSibling) {
-                if ($isBlock) {
-                    $nodeName = strtolower($node->nodeName);
-                    if (in_array($nodeName, $this->_descendList)) {
-                        $this->_addParagraphs($node);
-                    }
-                }
-                $openP = true;
-                $ltrimFirstTextNode = true;
-            }
-            if ($alterInline) {
-                if (! $isBlock) {
-                    $tmpNode = $node;
+                if ($alterInline) {
+                    $isInline = $isElement && ! $isBlock;
+                    $isText = ($node->nodeType === XML_TEXT_NODE);
+                    $isLastInline = (! $node->nextSibling
+                                   || ($node->nextSibling->nodeType === XML_ELEMENT_NODE
+                                       && in_array($node->nextSibling->nodeName, $this->_blocks)));
                     if ($isElement) {
-                        $this->_handleInline($tmpNode);
+                        $isFollowingBr = ($node->nodeName === 'br');
                     }
-                    $node = $node->nextSibling;
-                    $autop->appendChild($tmpNode);
+
+                    if ($isText) {
+                        $nodeText = $node->nodeValue;
+                        if ($ltrimFirstTextNode) {
+                            $nodeText = ltrim($nodeText);
+                            $ltrimFirstTextNode = false;
+                        }
+                        if ($isFollowingBr && preg_match('@^[ \\t]*\\n[ \\t]*@', $nodeText, $m)) {
+                            // if a user ends a line with <br>, don't add a second BR
+                            $nodeText = substr($nodeText, strlen($m[0]));
+                        }
+                        if ($isLastInline) {
+                            $nodeText = rtrim($nodeText);
+                        }
+                        $nodeText = str_replace("\n", $this->_unique . 'NL', $nodeText);
+                        $tmpNode = $node;
+                        $node = $node->nextSibling; // move loop to next node
+
+                        // alter node in place, then move into AUTOP
+                        $tmpNode->nodeValue = $nodeText;
+                        $autop->appendChild($tmpNode);
+
+                        continue;
+                    }
+                }
+                if ($isBlock || ! $node->nextSibling) {
+                    if ($isBlock) {
+                        if (in_array($node->nodeName, $this->_descendList)) {
+                            $elsToProcess[] = $node;
+                            //$this->_addParagraphs($node);
+                        }
+                    }
+                    $openP = true;
+                    $ltrimFirstTextNode = true;
+                }
+                if ($alterInline) {
+                    if (! $isBlock) {
+                        $tmpNode = $node;
+                        if ($isElement && false !== strpos($tmpNode->textContent, "\n")) {
+                            $inlinesToProcess[] = $tmpNode;
+                        }
+                        $node = $node->nextSibling;
+                        $autop->appendChild($tmpNode);
+                        continue;
+                    }
+                }
+
+                $node = $node->nextSibling;
+            }
+        }
+
+        // handle inline nodes
+        // no need to recurse, just queue up
+        while ($el = array_shift($inlinesToProcess)) {
+            $ignoreLeadingNewline = false;
+            foreach ($el->childNodes as $node) {
+                if ($node->nodeType === XML_ELEMENT_NODE) {
+                    if ($node->nodeValue === 'BR') {
+                        $ignoreLeadingNewline = true;
+                    } else {
+                        $ignoreLeadingNewline = false;
+                        if (false !== strpos($node->textContent, "\n")) {
+                            $inlinesToProcess[] = $node;
+                        }
+                    }
                     continue;
+                } elseif ($node->nodeType === XML_TEXT_NODE) {
+                    $text = $node->nodeValue;
+                    if ($text[0] === "\n" && $ignoreLeadingNewline) {
+                        $text = substr($text, 1);
+                        $ignoreLeadingNewline = false;
+                    }
+                    $node->nodeValue = str_replace("\n", $this->_unique . 'BR', $text);
                 }
             }
-
-            $node = $node->nextSibling;
         }
-    }
-
-    /**
-     * Turn newlines in inline elements into BRs
-     *
-     * @param DOMElement $el
-     */
-    protected function _handleInline(DOMElement $el)
-    {
-        $ignoreLeadingNewline = false;
-        foreach ($el->childNodes as $node) {
-            if ($node->nodeType === XML_ELEMENT_NODE) {
-                if ($node->nodeValue === 'BR') {
-                    $ignoreLeadingNewline = true;
-                } else {
-                    $ignoreLeadingNewline = false;
-                    $this->_handleInline($node);
-                }
-                continue;
-            }
-            if ($node->nodeType === XML_TEXT_NODE) {
-                $text = $node->nodeValue;
-                if ($text[0] === "\n" && $ignoreLeadingNewline) {
-                    $text = substr($text, 1);
-                    $ignoreLeadingNewline = false;
-                }
-                $node->nodeValue = str_replace("\n", $this->_unique . 'BR', $text);
-            }
-        }
-    }
-
-    /**
-     * Parse HTML into a DOMDocument
-     * @param string $html
-     * @param DOMDocument $doc
-     * @param string $encoding
-     * @return bool success
-     */
-    protected function _parseBodyContent($html, DOMDocument $doc, $encoding = 'UTF-8')
-    {
-        // parse to DOM, suppressing loadHTML warnings http://www.php.net/manual/en/domdocument.loadhtml.php#95463
-        libxml_use_internal_errors(true);
-        if (! @$doc->loadHTML("<html><meta http-equiv='content-type' content='text/html; charset={$encoding}'><body>"
-                . $html . '</body></html>')) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Serialize HTML from a DOMDocument
-     * @param DOMDocument $doc
-     * @return string
-     */
-    protected function _serializeBodyFragment(DOMDocument $doc)
-    {
-        $html = $doc->saveHTML();
-        list(,$html) = explode('<body>', $html, 2);
-        list($html) = explode('</body>', $html, 2);
-        return $html;
     }
 }

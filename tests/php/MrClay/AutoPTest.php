@@ -12,7 +12,6 @@ class MrClay_AutoPTest extends PHPUnit_Framework_TestCase {
     protected function setUp() {
         $this->_autop = new MrClay_AutoP;
     }
-
     
     public function testDomRoundtrip()
     {

@@ -2,23 +2,35 @@
 
 require_once dirname(__FILE__) . '/../../../../php/MrClay/AutoP/WordPress.php';
 require_once dirname(__FILE__) . '/../../../../php/MrClay/AutoP.php';
+require_once dirname(__FILE__) . '/../../../../php/MrClay/Bench.php';
+
+$bench = new MrClay_Bench();
 
 function compareTime($in, $test) {
-    $autopWP = new MrClay_AutoP_WordPress();
-    $autop = new MrClay_AutoP();
+    global $bench;
 
-    $time0 = microtime(true);
-    $autopWP->process($in);
-    $time1 = microtime(true);
-    $autop->process($in);
-    $time2 = microtime(true);
+    $old = new MrClay_AutoP_WordPress();
+    $new = new MrClay_AutoP();
 
-    return array(
-        'test' => $test,
-        'bytes' => strlen($in),
-        'time-old' => $time1 - $time0,
-        'time-new' => $time2 - $time1,
-    );
+    echo "Test: $test (" . strlen($in) . " bytes)\n";
+
+    $bench->reset();
+    do {
+        $old->process($in);
+    } while ($bench->shouldContinue());
+
+    echo "* WordPress: {$bench->meanTime} (n={$bench->iterationsRun})\n";
+    flush();
+    ob_flush();
+
+    $bench->reset();
+    do {
+        $new->process($in);
+    } while ($bench->shouldContinue());
+    
+    echo "* New      : {$bench->meanTime} (n={$bench->iterationsRun})\n\n";
+    flush();
+    ob_flush();
 }
 
 header('Content-Type: text/plain');
@@ -31,17 +43,20 @@ while (false !== ($entry = $d->read())) {
     }
 }
 
-//$tests = array("5"); // limit to a single test
+$tests = array("typical-post"); // limit to a single test
 
 $ins = array();
 foreach ($tests as $test) {
     $in = file_get_contents($d->path . '/' . "{$test}.in.html");
-    var_export(compareTime($in, $test));
-    //var_export(compareTime(str_repeat($in, 100), $test . "x100"));
+    compareTime($in, $test);
+    if ($test === 'typical-post') {
+        compareTime(str_repeat($in, 100), $test . "x100");
+    }
     $ins[] = $in;
 }
 // combine all
+exit();
 $in = implode("\n\n", $ins);
 $test = 'combinedAll';
-var_export(compareTime($in, $test));
-var_export(compareTime(str_repeat($in, 100), $test . "x100"));
+compareTime($in, $test);
+compareTime(str_repeat($in, 100), $test . "x100");
