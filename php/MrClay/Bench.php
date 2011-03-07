@@ -86,7 +86,7 @@ class MrClay_Bench {
     public function shouldContinue()
     {
         if ($this->_isSatisfied) {
-            throw new Exception('Tests continued after conditions were satisfied');
+            throw new Exception('Tests continued after conditions were satisfied. You need to reset() before re-use.');
         }
         $this->iterationsRun++;
         $this->benchTime = microtime(true) - $this->_timeInitialized;
