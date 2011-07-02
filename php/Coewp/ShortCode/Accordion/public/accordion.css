@@ -1,0 +1,60 @@
+.page-accordion {
+    padding:0 0 0 10px;
+    border-left:1px solid #ccc;
+    border-bottom:1px solid #ccc;
+    margin-bottom:15px;
+}
+.page-accordion-js {
+    margin-bottom:15px;
+}
+
+h3.page-accordion-heading {
+    margin:0;
+}
+
+.page-accordion-hidden .page-accordion-content {
+    display:none;
+}
+
+.page-accordion-js .page-accordion-content {
+    padding:15px 0 0 25px;
+    border-left:1px solid #ccc;
+    border-bottom:1px solid #ccc;
+}
+
+.page-accordion-visible h3.page-accordion-content {
+    border-left:1px solid #999;
+    padding:10px 0 0 10px;
+}
+
+.page-accordion-show,
+.page-accordion-content-bottom span {
+    font:normal 600 13px/16px sans-serif;
+    padding:2px .4em 2px;
+    color:#fff;
+    background: #999;
+    cursor: hand;
+    cursor: pointer;
+}
+.page-accordion-show { margin-right:.4em; }
+
+/* "hide" is .4ems narrower than "show" in IE8/FF.  */
+.page-accordion-visible .page-accordion-show { margin-right: .8em; }
+
+.page-accordion-content-bottom {
+    text-align:right;
+}
+.page-accordion-content-bottom span {
+    vertical-align: bottom;
+}
+
+/* eliminate large gap above bottom [hide] button */
+p + .page-accordion-content-bottom {
+    margin-top:-15px;
+}
+
+/* hide unwanted BRs produced by WordPress shortcode system */
+.page-accordion    + br ,
+.page-accordion-js + br {
+    display:none;
+}

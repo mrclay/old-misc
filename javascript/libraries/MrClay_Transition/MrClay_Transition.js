@@ -1,5 +1,6 @@
-/*! by Steve Clay http://code.google.com/p/mrclay/source/browse/trunk */
-/* Transition animation class 2006 */
+/*! (c) 2006 Steve Clay http://www.mrclay.org/ 
+ * @license http://mrclay.org/licenses/bsd.html
+ **/
 var MrClay = window.MrClay || {};
 
 MrClay.Transition = function (length, desiredFps) {
@@ -12,7 +13,11 @@ MrClay.Transition = function (length, desiredFps) {
 };
 
 MrClay.Transition.prototype = {
-    // let the transition instance handle styling the element directly
+    /**
+     * t.trackElementStyle(100, 150, null, 'slider', 'width', 'px');
+     * 
+     * t.trackElementStyle('#fff', '#c00', Easing.Expo.easeOut, 'slider', 'backgroundColor');
+     */
     trackElementStyle : function(from, to, easing, el, prop, unit) {
     	if (typeof el == 'string')
     		el = document.getElementById(el);

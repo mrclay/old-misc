@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WordPress accordion shortcode docs (alpha!)</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+    <body>
+        <h1>WordPress accordion shortcode docs (alpha!)</h1>
+
+        <h2>Creating an expandable section : the [accordion] shortcode</h2>
+        <p>If you prefer for some page content to appear collapsed when the page loads and for the user to be able to expand it, there's now a shortcode for this.</p>
+        <ol style="margin: 5px 0px 15px; padding: 0px 0px 0px 20px; font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; ">
+        <li style="font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; padding: 0px; margin: 0px; ">Create your content and add a heading at the top of it which you want to use as the section title (appearing to the left of the [show] button).</li>
+        <li style="font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; padding: 0px; margin: 0px; ">Click the "HTML" tab and find this content.</li>
+        <li style="font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; padding: 0px; margin: 0px; ">Create a couple empty lines before/after the content.<br></li>
+        <li style="font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; padding: 0px; margin: 0px; ">Insert <span style="font-family: courier new,courier; ">[accordion]</span> on an <em>empty line</em> before the header.</li>
+        <li style="font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; padding: 0px; margin: 0px; ">Insert <span style="font-family: courier new,courier; ">[/accordion]</span> on an <em>empty line</em> below the end of the content.</li>
+        <li style="font-weight: inherit; font-style: inherit; font-size: 13px; font-family: inherit; vertical-align: baseline; padding: 0px; margin: 0px; ">Preview the page/post to see the change, then update it.</li>
+        </ol>
+        <p>You may also specify the title of the section in the shortcode: <span style="font-family: courier new,courier; ">[accordion title="Read more..."]</span></p>
+        <h3>Example usage</h3>
+        <pre>...existing content<br><br>[accordion]<br>&lt;h3&gt;My header&lt;/h3&gt;<br>&lt;p&gt;my content&lt;/p&gt;<br>[/accordion]<br><br>existing content...<br></pre>
+        <h3>Optional Parameters</h3>
+        <ul>
+        <li><span style="font-family: courier new,courier; ">expand=1</span> : show the accordion expanded when the page loads.<span style="font-family: courier new,courier; "></span></li>
+        <li><span style="font-family: courier new,courier; ">title="My New Title"</span> : change the heading displayed next to the [hide/show] button.</li>
+        </ul>
+
+        <h2>Inserting a page in another page : the [page_accordion] shortcode</h2>
+
+<p style="padding-left: 30px; ">CAVEAT: Keep in mind that this shortcode has a server performance cost.  If the content is only meant for this page, consider using the [accordion] shortcode.</p>
+<p>Sometimes you might find it useful to include content from other pages/posts in another page. This can improve the user experience when folks visiting the site might want to see additional page content in the flow of reading a different page. This can be done using something called a "shortcode."</p>
+<p><span style="font-family: 'Lucida Grande',Verdana,sans-serif; color: #333333; "> In order to embed a page within another page:</span></p>
+<ol>
+<li>Create all the necessary pages first (even if they're just placeholders)</li>
+<li>Edit the page that will include content from other pages (we'll call this the "destination page")&nbsp;</li>
+<li>Click the "HTML" tab on the destination page</li>
+<li>Scroll to where you want to include the content and create 3 empty lines</li>
+<li>On the middle line enter the following shortcode:<br><br> <span style="font-family: courier new,courier; ">[page_accordion url="<span style="color: #ff0000; ">URL</span>"]<br></span> </li>
+<li>Replace <span style="font-family: courier new,courier; color: #ff0000; ">URL</span> with the address of a page or post within your site.</li>
+<li>Click to update the destination page.</li>
+</ol>
+<p style="padding-left: 30px; ">CAVEAT: You may not be able to include home pages or other specialized pages.</p>
+<h3>Example usage</h3>
+<pre>...content before.&lt;/p&gt;<br><br>[page_accordion url="http://example.com/2011/02/03/my-post/"]<br><br>&lt;p&gt;Content after...<br></pre>
+<h3>Optional Parameters</h3>
+<ul>
+<li><span style="font-family: courier new,courier; ">expand=1</span> : show the accordion expanded when the page loads.<span style="font-family: courier new,courier; "></span></li>
+<li><span style="font-family: courier new,courier; ">title="My New Title"</span> : change the heading displayed next to the [hide/show] button.</li>
+</ul>
+
+    </body>
+</html>

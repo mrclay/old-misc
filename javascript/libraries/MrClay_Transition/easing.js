@@ -1,11 +1,10 @@
-/* Easing Equations v2.0
- September 1, 2003
- (c) 2003 Robert Penner, all rights reserved. 
- This work is subject to the terms in http://www.robertpenner.com/easing_terms_of_use.html.
- 
- Ported to Javascript by Steve Clay 4/8/06
- License: http://mrclay.org/licenses/bsd.html
-*/
+/*! Easing Equations v2.0 | September 1, 2003
+ * (c) 2003 Robert Penner, all rights reserved.
+ * This work is subject to the terms in http://www.robertpenner.com/easing_terms_of_use.html.
+ * 
+ * Ported to Javascript by Steve Clay 4/8/06
+ * Port license: http://mrclay.org/licenses/bsd.html
+ */
 var Easing = {};
 
 Easing.Linear = {
