@@ -15,36 +15,36 @@ require_once 'Fawn/Function.php';
  */
 class Fawn_Function_DistanceBearing extends Fawn_Function {
 
-	var $useDefaultCache = true;
-	var $cacheGroup = '1yr';
-	function setupDefaultCache()
-	{
+    var $useDefaultCache = true;
+    var $cacheGroup = '1yr';
+    function setupDefaultCache()
+    {
         $this->useCache(Fawn::getCache(array(
-		    'lifeTime' => 3600 * 24 * 365 // 1 yr
-		)));
-	}
-	
-	function cacheIdFromArgs($args = array())
-	{
-		return "fawn_function_distancebearing_" . $args['id'];
-	}
+            'lifeTime' => 3600 * 24 * 365 // 1 yr
+        )));
+    }
 
-	function valueShouldBeCached($value)
+    function cacheIdFromArgs($args = array())
+    {
+        return "fawn_function_distancebearing_" . $args['id'];
+    }
+
+    function valueShouldBeCached($value)
     {
         return !empty($value);
     }
 
-	function _computeReturn($args = array())
-	{
-		if (!isset($args['id'])) {
-		    return array();
-		}
+    function _computeReturn($args = array())
+    {
+        if (!isset($args['id'])) {
+            return array();
+        }
         $id = (int)$args['id'];
         $db = $this->getDb('mysql');
-		if (!$db->IsConnected()) {
-			return array();
-		}
-		$data = $db->GetArray("
+        if (!$db->IsConnected()) {
+            return array();
+        }
+        $data = $db->GetArray("
 SELECT
     qq2.LocID AS id
     ,dist_mi AS miles
@@ -99,12 +99,12 @@ JOIN (
     ) qq2 ON (qq1.LocID = qq2.LocID)
 ORDER BY dist_mi        
         ");
-		return is_array($data)
+        return is_array($data)
             ? $data
             : array();
-	}
-	
-	public function getWithin($id, $maxMiles = 0, $maxNum = 0, $active = true)
+    }
+
+    public function getWithin($id, $maxMiles = 0, $maxNum = 0, $active = true)
     {
         $data = $this->getReturn(array('id' => (int)$id));
         if (! $maxMiles && ! $maxNum) {

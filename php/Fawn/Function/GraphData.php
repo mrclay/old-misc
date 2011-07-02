@@ -13,53 +13,53 @@ require_once 'Fawn/Function.php';
 class Fawn_Function_GraphData extends Fawn_Function {
 
     var $useDefaultCache = true;
-	function setupDefaultCache()
-	{
-		$this->useCache(Fawn::getCache());
-	}
+    function setupDefaultCache()
+    {
+        $this->useCache(Fawn::getCache());
+    }
 
-	function valueShouldBeCached($value)
+    function valueShouldBeCached($value)
     {
         // dont cache if using a "custom" time
         return ($value !== '' && strpos($value, 'customTime=1&') !== 0);
     }
 
-	function _computeReturn($args = array())
-	{
-		$stations = Fawn::getStations();
-		
-		// context for local standard time
+    function _computeReturn($args = array())
+    {
+        $stations = Fawn::getStations();
+
+        // context for local standard time
         $localTz = Fawn::Factory(
             'MrClay_TZShift', $stations[$args['id']]['tz_offset']);
-        
+
         if (isset($args['customTime'])) {
-		    $latestLocalTime = $args['customTime'];
+            $latestLocalTime = $args['customTime'];
             $data = $this->_getCustomTimeData($args['id'], $latestLocalTime); 
-		} else {
+        } else {
             $latest = Fawn::factory('Fawn_Function_Latest')->GetReturn();
-    		$latestLocalTime = $latest['obs'][$args['id']]['time_local_standard'];
-    		unset($latest);
-    		$data = $this->_getDataMysql($args['id'], $latestLocalTime);
+            $latestLocalTime = $latest['obs'][$args['id']]['time_local_standard'];
+            unset($latest);
+            $data = $this->_getDataMysql($args['id'], $latestLocalTime);
         }
-		
-		//Fawn::trace($data, __FILE__, __LINE__);
-		
-		if (!is_array($data)) {
-			return '';
-		}
-		
+
+        //Fawn::trace($data, __FILE__, __LINE__);
+
+        if (!is_array($data)) {
+            return '';
+        }
+
         $latestTime = $localTz->strtotime($latestLocalTime);
-        
+
         Fawn::loadClass('VBScript');
         $latestTime = VBScript::server_urlencode(date(
             'Y,n,j,G,i', $latestTime
         ));
-        
+
         // calc wetbulb
         Fawn::loadClass('Fawn_Calc');
-        
+
         $dataByTime = array();
-		foreach ($data as $key => $row) {
+        foreach ($data as $key => $row) {
             if ($row['temp2fts'] == 0
                 && $row['temp6fts'] == 0
                 && $row['temp30fts'] == 0
@@ -87,14 +87,14 @@ class Fawn_Function_GraphData extends Fawn_Function {
             // save row
             $dataByTime[$localTz->strtotime($row['UTC'])] = $row;
             $data[$key] = null;
-		}
-		
-		//Fawn::trace($dataByTime, __FILE__, __LINE__);
-		
-		// fill in missing
-		$t = $localTz->strtotime($latestLocalTime);
-		$totalObs = 0;
-		while ($totalObs <= 672) {
+        }
+
+        //Fawn::trace($dataByTime, __FILE__, __LINE__);
+
+        // fill in missing
+        $t = $localTz->strtotime($latestLocalTime);
+        $totalObs = 0;
+        while ($totalObs <= 672) {
             if (!isset($dataByTime[$t])) {
                 $dataByTime[$t] = array (
                     'UTC' => '',
@@ -111,45 +111,45 @@ class Fawn_Function_GraphData extends Fawn_Function {
                     'wetBulbTemp' => '',
                 );
             }
-		
-		    $totalObs++;
-		    $t -= 900;
-		}
-		unset($data);
+
+            $totalObs++;
+            $t -= 900;
+        }
+        unset($data);
         krsort($dataByTime);
-        
+
         Fawn::trace($dataByTime, __FILE__, __LINE__);
-        
+
         foreach ($dataByTime as $time => $row) {
-		    unset($dataByTime[$time]['UTC']);
-		}		
+            unset($dataByTime[$time]['UTC']);
+        }		
 
         /* as this is a large amount of data, we'll form encode it here instead
-		of a view function so that it will all be cached */
+        of a view function so that it will all be cached */
         Fawn::loadClass('Fawn_Array');
         $fv = Fawn_Array::toFlashVars($dataByTime);
 
         return isset($args['customTime'])
             ? "customTime=1&{$fv}&latestTime={$latestTime}"
             : "{$fv}&latestTime={$latestTime}";
-	}
+    }
 
     // turns off cache if customTime is given
-	function getSwfInput($args)
-	{
-	    if (isset($args['customTime'])) {
+    function getSwfInput($args)
+    {
+        if (isset($args['customTime'])) {
             $this->dontUseCache();
         }
         return $this->getReturn($args);
-	}
-	
-	private function _getDataMysql($id, $latestLocalTime)
-	{
+    }
+
+    private function _getDataMysql($id, $latestLocalTime)
+    {
         $db = $this->getDb('mysql');
-		if (!$db->IsConnected()) {
-			return false;
-		}
-		$sql = "
+        if (!$db->IsConnected()) {
+            return false;
+        }
+        $sql = "
 SELECT
     UTC
     ,ROUND(temp_air_60cm_C, 2) AS temp2fts
@@ -169,15 +169,15 @@ ORDER BY UTC DESC
 LIMIT 672
         ";
         return $db->GetArray($sql);
-	}
+    }
 
     private function _getCustomTimeData($id, $latestLocalTime)
-	{
+    {
         $db = $this->getDb('mysql');
-		if (!$db->IsConnected()) {
-			return false;
-		}
-		$sql = "
+        if (!$db->IsConnected()) {
+            return false;
+        }
+        $sql = "
 SELECT
     UTC
     ,ROUND(temp_air_60cm_C, 2) AS temp2fts
@@ -198,7 +198,7 @@ ORDER BY UTC DESC
 LIMIT 672
         ";
         return $db->GetArray($sql);
-	}
+    }
 }
 
 ?>
