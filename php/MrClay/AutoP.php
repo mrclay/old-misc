@@ -26,34 +26,43 @@ class MrClay_AutoP {
      */
     protected $_xpath = null;
 
-    protected $_blocks = array(
-        'table|thead|tfoot|caption|col|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li',
-        '|pre|select|option|form|map|area|blockquote|math|style|p|h1|h2',
-        '|h3|h4|h5|h6|hr|fieldset|legend|section|article|aside|hgroup|header|footer',
-        '|nav|figure|figcaption|details|menu|summary'
-    );
+    protected $_blocks = 'address article area aside blockquote caption col colgroup dd 
+        details div dl dt fieldset figure figcaption footer form h1 h2 h3 h4 h5 h6 header 
+        hr hgroup legend map math menu nav noscript p pre section select style summary
+        table tbody td tfoot th thead tr ul ol option li';
+
+    /**
+     * @var array
+     */
+    protected $_inlines = 'a abbr audio b button canvas caption cite code command datalist
+        del dfn em embed i iframe img input ins kbd keygen label map mark meter object
+        output progress q rp rt ruby s samp script select small source span strong style
+        sub sup textarea time var video wbr';
 
     /**
      * Descend into these elements to add Ps
      *
      * @var array
      */
-    protected $_descendList = 'body|form|div|blockquote|section|article|aside|header|footer|details';
+    protected $_descendList = 'article aside blockquote body details div footer form
+        header section';
 
     /**
      * Add Ps inside these elements
      *
      * @var array
      */
-    protected $_alterList = 'body|div|blockquote|section|article|aside|header|footer|details';
+    protected $_alterList = 'article aside blockquote body details div footer header
+        section';
 
     protected $_unique = '';
 
     public function __construct()
     {
-        $this->_blocks = explode('|', implode('', $this->_blocks));
-        $this->_descendList = explode('|', $this->_descendList);
-        $this->_alterList = explode('|', $this->_alterList);
+        $this->_blocks = preg_split('@\\s+@', $this->_blocks);
+        $this->_descendList = preg_split('@\\s+@', $this->_descendList);
+        $this->_alterList = preg_split('@\\s+@', $this->_alterList);
+        $this->_inlines = preg_split('@\\s+@', $this->_inlines);
         $this->_unique = md5(__FILE__);
     }
 
@@ -78,10 +87,12 @@ class MrClay_AutoP {
 
         $this->_doc = new DOMDocument();
        
-        // parse to DOM, suppressing loadHTML warnings http://www.php.net/manual/en/domdocument.loadhtml.php#95463
+        // parse to DOM, suppressing loadHTML warnings
+        // http://www.php.net/manual/en/domdocument.loadhtml.php#95463
         libxml_use_internal_errors(true);
-        if (! @$this->_doc->loadHTML("<html><meta http-equiv='content-type' content='text/html; charset={$this->encoding}'><body>"
-                . $html . '</body></html>')) {
+        if (! @$this->_doc->loadHTML("<html><meta http-equiv='content-type' " 
+                . "content='text/html; charset={$this->encoding}'><body>{$html}</body>"
+                . "</html>")) {
             return false;
         }
 
@@ -95,7 +106,9 @@ class MrClay_AutoP {
 
         // split AUTOPs into multiples at /\n\n+/
         $html = preg_replace('/(' . $this->_unique . 'NL){2,}/', '</autop><autop>', $html);
-        $html = str_replace(array($this->_unique . 'BR', $this->_unique . 'NL', '<br>'), '<br />', $html);
+        $html = str_replace(array($this->_unique . 'BR', $this->_unique . 'NL', '<br>'), 
+                '<br />',
+                $html);
         $html = str_replace('<br /></autop>', '</autop>', $html);
 
         // re-parse so we can handle new AUTOP elements
