@@ -5,7 +5,7 @@
  * users use newlines to signal line and paragraph breaks. In all cases output
  * should be well-formed markup.
  *
- * In DIV elements, Ps are only added when their would be at
+ * In DIV elements, Ps are only added when there would be at
  * least two of them.
  *
  * @author Steve Clay <steve@mrclay.org>
