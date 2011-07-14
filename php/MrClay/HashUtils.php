@@ -1,4 +1,8 @@
 <?php
+/**
+ * @deprecated use MrClay_Hmac
+ */
+
 
 /** 
  * Simple functions to hash, sign and verify signed content using randomly
@@ -6,7 +10,10 @@
  *
  * MD5 collisions can be engineered with the use of rainbow tables, but when 
  * random salts are introduced, this becomes ineffective.
+ * 
  * @link http://en.wikipedia.org/wiki/Rainbow_table#Defense_against_rainbow_tables
+ * 
+ * @deprecated use MrClay_Hmac
  */
 class MrClay_HashUtils {
     
