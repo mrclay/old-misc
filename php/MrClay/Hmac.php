@@ -17,6 +17,7 @@
  * @link http://en.wikipedia.org/wiki/HMAC
  * 
  * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_Hmac {
 
@@ -89,6 +90,16 @@ class MrClay_Hmac {
     public function createSalt($length)
     {
         return $this->_rand->getUrlSafeChars($length);
+    }
+    
+    /**
+     * Set the secrey key
+     * 
+     * @param type $secretKey
+     */
+    public function setKey($secretKey)
+    {
+        return $this->_key = $secretKey;
     }
     
     /**

@@ -1,5 +1,7 @@
 <?php
 
+require '../Rand.php';
+require '../Hmac.php';
 require '../CookieStorage.php';
 
 header('Cache-Control: private, no-cache');

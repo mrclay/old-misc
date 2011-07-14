@@ -2,6 +2,8 @@
 
 /**
  * Store tamper-proof strings in an HTTP cookie
+ * 
+ * Requires MrClay_Hmac (and MrClay_Rand)
  *
  * <code>
  * $storage = new MrClay_CookieStorage(array(
@@ -32,6 +34,9 @@
  *     ,'mode' => MrClay_CookieStorage::MODE_ENCRYPT
  * ));
  * </code>
+ * 
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_CookieStorage {
 
@@ -46,15 +51,24 @@ class MrClay_CookieStorage {
     public $errors = array();
 
 
-    public function __construct($options = array())
+    public function __construct($options = array(), MrClay_Hmac $hmac = null)
     {
         $this->_o = array_merge(self::getDefaults(), $options);
+        if (empty($this->_o['secret'])) {
+            throw new Exception('secret must be set in $options.');
+        }
+        if (! $hmac) {
+            $hmac = new MrClay_Hmac($this->_o['secret'], $this->_o['hashAlgo']);
+        } else {
+            $hmac->setKey($this->_o['secret']);
+        }
+        $this->_hmac = $hmac;
     }
     
-    public static function hash($input)
+    /*public static function hash($input)
     {
         return str_replace('=', '', base64_encode(hash('ripemd160', $input, true)));
-    }
+    }*/
     
     public static function encrypt($key, $str)
     {
@@ -82,9 +96,10 @@ class MrClay_CookieStorage {
             ,'secure' => false
             ,'path' => '/'
             ,'expire' => '2147368447' // Sun, 17-Jan-2038 19:14:07 GMT (Google)
-            ,'hashFunc' => array('MrClay_CookieStorage', 'hash')
+            //,'hashFunc' => array('MrClay_CookieStorage', 'hash')
             ,'encryptFunc' => array('MrClay_CookieStorage', 'encrypt')
             ,'decryptFunc' => array('MrClay_CookieStorage', 'decrypt')
+            ,'hashAlgo' => 'ripemd160'
             ,'mode' => self::MODE_VISIBLE
         );
     }
@@ -99,10 +114,6 @@ class MrClay_CookieStorage {
      */
     public function store($name, $str)
     {
-        if (empty($this->_o['secret'])) {
-            $this->errors[] = 'Must first set the option: secret.';
-            return false;
-        }
         return ($this->_o['mode'] === self::MODE_ENCRYPT)
             ? $this->_storeEncrypted($name, $str)
             : $this->_store($name, $str);
@@ -110,15 +121,11 @@ class MrClay_CookieStorage {
     
     private function _store($name, $str)
     {
-        if (! is_callable($this->_o['hashFunc'])) {
-            $this->errors[] = 'Hash function not callable';
-            return false;
-        }
         $time = base_convert($_SERVER['REQUEST_TIME'], 10, 36); // pack time
-        // tie sig to this cookie name
-        $hashInput = $this->_o['secret'] . $name . $time . $str;
-        $sig = call_user_func($this->_o['hashFunc'], $hashInput);
-        $raw = $sig . '|' . $time . '|' . $str;
+        // tie sig to this cookie name and timestamp
+        list($val, $salt, $hash) = $this->_hmac->sign($name . $time . $str);
+        
+        $raw = $salt . '|' . $hash . '|' . $time . '|' . $str;
         if (strlen($name . $raw) > self::LENGTH_LIMIT) {
             $this->errors[] = 'Cookie is likely too large to store.';
             return false;
@@ -140,8 +147,14 @@ class MrClay_CookieStorage {
             return false;
         }
         $time = base_convert($_SERVER['REQUEST_TIME'], 10, 36); // pack time
-        $key = self::hash($this->_o['secret']);
-        $raw = call_user_func($this->_o['encryptFunc'], $key, $key . $time . '|' . $str);
+        
+        // tie sig to this cookie name and timestamp
+        list($val, $salt, $hash) = $this->_hmac->sign($name . $time . $str);
+        
+        $cryptKey = hash('ripemd160', $this->_o['secret'], true);
+        $encrypted = call_user_func($this->_o['encryptFunc'], $cryptKey, '1' . $str);
+        
+        $raw = $salt . '|' . $hash . '|' . $time . '|' . $encrypted;
         if (strlen($name . $raw) > self::LENGTH_LIMIT) {
             $this->errors[] = 'Cookie is likely too large to store.';
             return false;
@@ -177,14 +190,14 @@ class MrClay_CookieStorage {
         $cookie = get_magic_quotes_gpc()
             ? stripslashes($_COOKIE[$name])
             : $_COOKIE[$name];
-        $parts = explode('|', $cookie, 3);
-        if (3 !== count($parts)) {
+        $parts = explode('|', $cookie, 4);
+        if (4 !== count($parts)) {
             $this->errors[] = 'Cookie was tampered with.';
             return false;
         }
-        list($sig, $time, $str) = $parts;
-        $hashInput = $this->_o['secret'] . $name . $time . $str;
-        if ($sig !== call_user_func($this->_o['hashFunc'], $hashInput)) {
+        list($salt, $hash, $time, $str) = $parts;
+        
+        if (! $this->_hmac->isValid(array($name . $time . $str, $salt, $hash))) {
             $this->errors[] = 'Cookie was tampered with.';
             return false;
         }
@@ -205,20 +218,26 @@ class MrClay_CookieStorage {
         $cookie = get_magic_quotes_gpc()
             ? stripslashes($_COOKIE[$name])
             : $_COOKIE[$name];
-        $key = self::hash($this->_o['secret']);
-        $timeStr = call_user_func($this->_o['decryptFunc'], $key, $cookie);
-        if (! $timeStr) {
+        $parts = explode('|', $cookie, 4);
+        if (4 !== count($parts)) {
             $this->errors[] = 'Cookie was tampered with.';
             return false;
         }
-        $timeStr = rtrim($timeStr, "\x00");
-        // verify decryption
-        if (0 !== strpos($timeStr, $key)) {
+        list($salt, $hash, $time, $encrypted) = $parts;
+        
+        $cryptKey = hash('ripemd160', $this->_o['secret'], true);
+        $str = call_user_func($this->_o['decryptFunc'], $cryptKey, $encrypted);
+        if (! $str) {
             $this->errors[] = 'Cookie was tampered with.';
             return false;
         }
-        $timeStr = substr($timeStr, strlen($key));
-        list($time, $str) = explode('|', $timeStr, 2);
+        $str = substr($str, 1); // remove leading "1"
+        $str = rtrim($str, "\x00"); // remove trailing null bytes
+        
+        if (! $this->_hmac->isValid(array($name . $time . $str, $salt, $hash))) {
+            $this->errors[] = 'Cookie was tampered with.';
+            return false;
+        }
         $time = base_convert($time, 36, 10); // unpack time
         $this->_returns[self::MODE_ENCRYPT][$name] = array($str, $time);
         return $str;
@@ -243,5 +262,10 @@ class MrClay_CookieStorage {
     private $_o;
 
     private $_returns = array();
+    
+    /**
+     * @var MrClay_Hmac
+     */
+    protected $_hmac;
 }
 
