@@ -22,8 +22,15 @@
 class MrClay_Hmac {
 
     protected $_rand;
-    protected $_key;
-    protected $_hashAlgo;
+    protected $_secret;
+    protected $_hashAlgo = 'sha256';
+
+    /**
+     * iterations to perform during key derivation
+     *
+     * @var int
+     */
+    protected $_iterations = 5000;
 
     /**
      * @param string $secretKey
@@ -38,10 +45,10 @@ class MrClay_Hmac {
             $rand = new MrClay_Rand();
         }
         $this->_rand = $rand;
-        $this->_key = $secretKey;
-        $this->_hashAlgo = $hashAlgo;
+        $this->setSecret($secretKey);
+        $this->setHashAlgo($hashAlgo);
     }
-    
+
     /**
      * Create an array containing the value given, a salt, and a hash created with the key.
      * 
@@ -51,7 +58,7 @@ class MrClay_Hmac {
      * 
      * @return array [value, salt, hash]
      */
-    public function sign($val, $saltLength = 10)
+    public function sign($val, $saltLength = 16)
     {
         $origVal = $val;
         if (! is_string($val)) {
@@ -93,13 +100,79 @@ class MrClay_Hmac {
     }
     
     /**
-     * Set the secrey key
+     * Set the secret from which a key will be derived
      * 
-     * @param type $secretKey
+     * @param type $secret
+     *
+     * @return self
      */
-    public function setKey($secretKey)
+    public function setSecret($secret)
     {
-        return $this->_key = $secretKey;
+        $this->_secret = $secret;
+        return $this;
+    }
+
+    public function setIterations($numIterations = 5000)
+    {
+        $this->_iterations = $numIterations;
+    }
+
+    /**
+     * @param string $algo
+     *
+     * @return MrClay_Hmac
+     *
+     * @throw InvalidArgumentException
+     */
+    public function setHashAlgo($algo)
+    {
+        $algo = strtolower($algo);
+        if (! in_array($algo, hash_algos())) {
+            throw new InvalidArgumentException("Hash algorithm '$algo' unsupported.");
+        }
+        $this->_hashAlgo = $algo;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHashAlgo()
+    {
+        return $this->_hashAlgo;
+    }
+
+    /**
+     * Derive a key via PBKDF2 (described in RFC 2898)
+     *
+     * @param string $p password
+     * @param string $s salt
+     * @param int $c iteration count (use 1000 or higher)
+     * @param int $kl derived key length
+     * @param string $a hash algorithm
+     *
+     * @return string derived key
+     *
+     * @author Andrew Johnson
+     * @link http://www.itnewb.com/v/Encrypting-Passwords-with-PHP-for-Storage-Using-the-RSA-PBKDF2-Standard
+    */
+    function pbkdf2($p, $s, $c, $kl, $a = 'sha256') {
+        $hl = strlen(hash($a, null, true)); // Hash length
+        $kb = ceil($kl / $hl);              // Key blocks to compute
+        $dk = '';                           // Derived key
+        // Create key
+        for ($block = 1; $block <= $kb; $block++) {
+            // Initial hash for this block
+            $ib = $b = hash_hmac($a, $s . pack('N', $block), $p, true);
+            // Perform block iterations
+            for ($i = 1; $i < $c; $i++) {
+                // XOR each iterate
+                $ib ^= ($b = hash_hmac($a, $b, $p, true));
+            }
+            $dk .= $ib; // Append iterated block
+        }
+        // Return derived key of correct length
+        return substr($dk, 0, $kl);
     }
     
     /**
@@ -120,12 +193,14 @@ class MrClay_Hmac {
      * Get a hash of a string with the key and salt
      * 
      * @param string $val
+     *
      * @param string $salt
+     * 
      * @return string 
      */
     protected function _digest($val, $salt)
     {
-        $key = $this->_key . $salt;
+        $key = $this->pbkdf2($this->_secret, $salt, $this->_iterations, 32);
         $hash = hash_hmac($this->_hashAlgo, $val, $key, true);
         return rtrim(strtr(base64_encode($hash), '+/', '-_'), '=');
     }

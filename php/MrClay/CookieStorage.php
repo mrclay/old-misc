@@ -60,7 +60,7 @@ class MrClay_CookieStorage {
         if (! $hmac) {
             $hmac = new MrClay_Hmac($this->_o['secret'], $this->_o['hashAlgo']);
         } else {
-            $hmac->setKey($this->_o['secret']);
+            $hmac->setSecret($this->_o['secret']);
         }
         $this->_hmac = $hmac;
     }
