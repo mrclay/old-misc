@@ -101,11 +101,11 @@ class MrClay_Hmac_SignedRequest {
      */
     public function decode($str, $returnJson = false)
     {
-        list($val, $salt, $hash) = explode('.', $str, 3);
-        if (empty($salt) || empty($hash)) {
+        if (! preg_match('@^[^\\.]+\\.[^\\.]+\\.[^\\.]+$@', $str)) {
             $this->error = 'Invalid format';
             return array(false, null);
         }
+        list($val, $salt, $hash) = explode('.', $str, 3);
         $json = MrClay_Hmac::base64urlDecode($val);
         if (false === $json) {
             $this->error = 'Base64urlDecode failed';
