@@ -48,7 +48,8 @@ class MrClay_Hmac_SignedRequest {
         $ctx = stream_context_create(array(
             'http' => array(
                 'method' => 'POST',
-                'content' => http_build_query($data)
+                'content' => http_build_query($data),
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
             )
         ));
         return file_get_contents($url, false, $ctx);
