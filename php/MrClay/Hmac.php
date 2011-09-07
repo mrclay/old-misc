@@ -184,9 +184,23 @@ class MrClay_Hmac {
      * 
      * @return string
      */
-    public static function base64url($data)
+    public static function base64urlEncode($data)
     {
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    /**
+     * base 64 decoding with URL-safe chars and no padding (=)
+     *
+     * @link http://en.wikipedia.org/wiki/Base64#URL_applications
+     *
+     * @param string $str
+     *
+     * @return string
+     */
+    public static function base64urlDecode($str)
+    {
+        return base64_decode(strtr($str, '-_', '+/'));
     }
     
     /**

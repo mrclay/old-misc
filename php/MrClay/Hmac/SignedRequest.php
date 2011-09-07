@@ -16,6 +16,13 @@ class MrClay_Hmac_SignedRequest {
     public $error = '';
 
     /**
+     * Name the encoded value is posted/received under
+     *
+     * @var string
+     */
+    public $varName = 'req';
+
+    /**
      * @param string|MrClay_Hmac $secret
      */
     public function __construct($secret)
@@ -29,31 +36,6 @@ class MrClay_Hmac_SignedRequest {
     }
 
     /**
-     * Get a valid value from a signed HTTP POST request
-     *
-     * @param array|null $postData
-     *
-     * @return array [isValid, valueReceived]
-     */
-    public function receive(array $postData = null)
-    {
-        if (! $postData) {
-            $postData = $_POST;
-        }
-        if (! isset($postData['value'], $postData['salt'], $postData['hash'])) {
-            $this->error = 'Missing at least one key: value, salt, hash';
-            return array(false, null);
-        }
-        $isValid = $this->hmac->isValid(array($postData['value'], $postData['salt'], $postData['hash']));
-        if ($isValid) {
-            return array(true, unserialize($postData['value']));
-        } else {
-            $this->error = "Hash did not validate.";
-            return array(false, null);
-        }
-    }
-
-    /**
      * @param mixed $value
      *
      * @param $url
@@ -62,24 +44,70 @@ class MrClay_Hmac_SignedRequest {
      */
     public function send($value, $url)
     {
+        $data[$this->varName] = $this->encode($value);
         $ctx = stream_context_create(array(
             'http' => array(
                 'method' => 'POST',
-                'content' => http_build_query($this->generatePost($value))
+                'content' => http_build_query($data)
             )
-         ));
+        ));
         return file_get_contents($url, false, $ctx);
     }
 
     /**
-     * @param mixed $value
-     * 
-     * @return array
+     * Get validate JSON from a signed HTTP request
+     *
+     * @param array $requestData
+     *
+     * @return array [isValid, json]
      */
-    public function generatePost($value)
+    public function receive($requestData = null)
     {
-        list($data['value'], $data['salt'], $data['hash']) = $this->hmac->sign($value);
-        $data['value'] = serialize($data['value']);
-        return $data;
+        if (! $requestData) {
+            $requestData = $_REQUEST;
+        }
+        if (empty($requestData[$this->varName]) || ! is_string($requestData[$this->varName])) {
+            $this->error = "Value not present in request data or is not string";
+            return array(false, null);
+        }
+        return $this->decode($requestData[$this->varName]);
+    }
+
+    /**
+     * Encode and sign 
+     *
+     * @param mixed $value
+     *
+     * @return string
+     */
+    public function encode($value)
+    {
+        $json = json_encode($value);
+        list($data['value'], $data['salt'], $data['hash']) = $this->hmac->sign($json);
+        return $this->hmac->base64urlEncode($json) . '.' . $data['salt'] . '.' . $data['hash'];
+    }
+
+    /**
+     * Get valid JSON from a signed string
+     *
+     * @param string $str
+     *
+     * @return array [isValid, json]
+     */
+    public function decode($str)
+    {
+        list($val, $salt, $hash) = explode('.', $str, 3);
+        if (empty($salt) || empty($hash)) {
+            $this->error = 'Invalid format';
+            return array(false, null);
+        }
+        $json = MrClay_Hmac::base64urlDecode($val);
+        if (false === $json) {
+            $this->error = 'Base64urlDecode failed';
+            return array(false, null);
+        }
+        if ($this->hmac->isValid(array($json, $salt, $hash))) {
+            return array(true, $json);
+        }
     }
 }

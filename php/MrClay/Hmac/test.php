@@ -13,4 +13,3 @@ var_export($signed);
 
 echo "\n\nisValid(value, salt, hash) = ";
 var_export($hmac->isValid($signed));
-
