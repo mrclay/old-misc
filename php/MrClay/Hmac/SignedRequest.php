@@ -55,13 +55,15 @@ class MrClay_Hmac_SignedRequest {
     }
 
     /**
-     * Get validate JSON from a signed HTTP request
+     * Get validate a value from a signed HTTP request
      *
      * @param array $requestData
      *
-     * @return array [isValid, json]
+     * @param bool $returnJson return JSON instead of value in 2nd position
+     *
+     * @return array [isValid, value]
      */
-    public function receive($requestData = null)
+    public function receive($requestData = null, $returnJson = false)
     {
         if (! $requestData) {
             $requestData = $_REQUEST;
@@ -70,7 +72,7 @@ class MrClay_Hmac_SignedRequest {
             $this->error = "Value not present in request data or is not string";
             return array(false, null);
         }
-        return $this->decode($requestData[$this->varName]);
+        return $this->decode($requestData[$this->varName], $returnJson);
     }
 
     /**
@@ -92,9 +94,11 @@ class MrClay_Hmac_SignedRequest {
      *
      * @param string $str
      *
-     * @return array [isValid, json]
+     * @param bool $returnJson return JSON instead of value in 2nd position
+     *
+     * @return array [isValid, value]
      */
-    public function decode($str)
+    public function decode($str, $returnJson = false)
     {
         list($val, $salt, $hash) = explode('.', $str, 3);
         if (empty($salt) || empty($hash)) {
@@ -106,8 +110,10 @@ class MrClay_Hmac_SignedRequest {
             $this->error = 'Base64urlDecode failed';
             return array(false, null);
         }
-        if ($this->hmac->isValid(array($json, $salt, $hash))) {
-            return array(true, $json);
+        if (! $this->hmac->isValid(array($json, $salt, $hash))) {
+            $this->error = 'Hash invalid';
+            return array(false, null);
         }
+        return array(true, $returnJson ? $json : json_decode($json, true));
     }
 }
