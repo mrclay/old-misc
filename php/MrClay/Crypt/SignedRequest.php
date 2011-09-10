@@ -1,14 +1,16 @@
 <?php
 
+namespace MrClay\Crypt;
+
+use MrClay\Crypt\Hmac;
+
 /**
  * Send/receive HMAC signed values over HTTP POST requests
- *
- * @deprecated use MrClay\Crypt\SignedRequest
  */
-class MrClay_Hmac_SignedRequest {
+class SignedRequest {
 
     /**
-     * @var \MrClay_Hmac
+     * @var \MrClay\Crypt\Hmac
      */
     protected $hmac;
 
@@ -25,16 +27,15 @@ class MrClay_Hmac_SignedRequest {
     public $varName = 'req';
 
     /**
-     * @param string|MrClay_Hmac $secret
+     * @param string|\MrClay\Crypt\Hmac $password
      */
-    public function __construct($secret)
+    public function __construct($password)
     {
-        if ($secret instanceof MrClay_Hmac) {
-            $hmac = $secret;
-        } elseif (is_string($secret)) {
-            $hmac = new MrClay_Hmac($secret);
+        if ($password instanceof Hmac) {
+            $this->hmac = $password;
+        } else {
+            $this->hmac = new Hmac($password);
         }
-        $this->hmac = $hmac;
     }
 
     /**
@@ -42,7 +43,7 @@ class MrClay_Hmac_SignedRequest {
      *
      * @param $url
      *
-     * @return string 
+     * @return string
      */
     public function send($value, $url)
     {
@@ -79,7 +80,7 @@ class MrClay_Hmac_SignedRequest {
     }
 
     /**
-     * Encode and sign 
+     * Encode and sign
      *
      * @param mixed $value
      *
@@ -87,9 +88,7 @@ class MrClay_Hmac_SignedRequest {
      */
     public function encode($value)
     {
-        $json = json_encode($value);
-        list($data['value'], $data['salt'], $data['hash']) = $this->hmac->sign($json);
-        return $this->hmac->base64urlEncode($json) . '.' . $data['salt'] . '.' . $data['hash'];
+        return $this->hmac->sign(json_encode($value))->encode();
     }
 
     /**
@@ -103,20 +102,16 @@ class MrClay_Hmac_SignedRequest {
      */
     public function decode($str, $returnJson = false)
     {
-        if (! preg_match('@^[^\\.]+\\.[^\\.]+\\.[^\\.]+$@', $str)) {
+        $cont = Container::decode(new Encoding\Base64Url(), $str);
+        if (! $cont || count($cont) !== 3) {
             $this->error = 'Invalid format';
             return array(false, null);
         }
-        list($val, $salt, $hash) = explode('.', $str, 3);
-        $json = MrClay_Hmac::base64urlDecode($val);
-        if (false === $json) {
-            $this->error = 'Base64urlDecode failed';
-            return array(false, null);
-        }
-        if (! $this->hmac->isValid(array($json, $salt, $hash))) {
+        if (! $this->hmac->isValid($cont)) {
             $this->error = 'Hash invalid';
             return array(false, null);
         }
+        $json = $cont[0]->getBytes();
         return array(true, $returnJson ? $json : json_decode($json, true));
     }
 }

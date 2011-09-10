@@ -18,6 +18,8 @@
  * 
  * @author Steve Clay <steve@mrclay.org>
  * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ *
+ * @deprecated use MrClay\Crypt\Hmac
  */
 class MrClay_Hmac {
 

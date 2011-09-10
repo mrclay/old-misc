@@ -7,6 +7,8 @@
  * 
  * @author Steve Clay <steve@mrclay.org>
  * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ *
+ * @deprecated use MrClay\Crypt\ByteString
  */
 class MrClay_Rand {
     
