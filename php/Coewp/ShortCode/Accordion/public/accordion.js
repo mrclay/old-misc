@@ -19,6 +19,9 @@ jQuery(function ($) {
         	visible = !visible;
             $('span.page-accordion-show', that).html(visible ? 'hide' : 'show');
             $(that).toggleClass('page-accordion-hidden page-accordion-visible');
+            // must trigger re-layout for IE7 or IE8 in compat mode
+            // @link http://stackoverflow.com/questions/1702399/how-can-i-force-reflow-after-dhtml-change-in-ie7/1702485#1702485
+            document.body.className += '';
         }
         $('span.page-accordion-show, div.page-accordion-content-bottom span', this).click(toggle);
         // allow expand by settings or if page loaded to the heading's id
