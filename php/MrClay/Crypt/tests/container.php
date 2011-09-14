@@ -14,20 +14,19 @@ $cont[] = MrClay\Crypt\ByteString::rand(32);
 $encoding = new MrClay\Crypt\Encoding\Base64Url();
 
 var_export($cont->getSizes());
-echo "\n\n";
+echo "\n\nThese should match:\n";
 
 $encodedCont = $cont->encode($encoding);
 
-echo $encodedCont . "\n\n";
+echo $encodedCont . "\n";
 
 $cont = \MrClay\Crypt\Container::decode($encoding, $encodedCont);
 
-echo $cont->encode($encoding) . "\n\n";
+echo $cont->encode($encoding) . "\n";
 
-$bytes = $cont->toBytes();
-$sizes = $cont->getSizes();
+$bin = $cont->toBinary();
 
-$cont = \MrClay\Crypt\Container::fromBytes($bytes, $sizes);
+$cont = \MrClay\Crypt\Container::fromBinary($bin);
 
 echo $cont->encode();
 

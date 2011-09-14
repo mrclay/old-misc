@@ -6,7 +6,7 @@ use MrClay\Crypt\ByteString;
 use MrClay\Crypt\KeyDeriver;
 
 /**
- * Wrapper around HMAC sign/verify process with unique salts and more compact salt/hashes.
+ * Wrapper around HMAC sign/verify process with unique salts and derived keys.
  *
  * USAGE
  * <code>

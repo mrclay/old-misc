@@ -5,7 +5,7 @@ namespace MrClay\Crypt;
 use MrClay\Crypt\Hmac;
 
 /**
- * Send/receive HMAC signed values over HTTP POST requests
+ * Send/receive HMAC signed values (JSON-encoded) over HTTP POST requests
  */
 class SignedRequest {
 
@@ -39,11 +39,13 @@ class SignedRequest {
     }
 
     /**
+     * Send a POST request containing the signed value
+     *
      * @param mixed $value
      *
      * @param $url
      *
-     * @return string
+     * @return string the returned response body
      */
     public function send($value, $url)
     {

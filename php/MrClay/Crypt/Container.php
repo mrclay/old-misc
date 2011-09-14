@@ -5,6 +5,9 @@ namespace MrClay\Crypt;
 use MrClay\Crypt\Encoding\EncodingInterface;
 use MrClay\Crypt\Encoding\Base64Url;
 
+/**
+ * A container for a list of binary strings. Can be easily encoded to an ASCII environment, or to binary
+ */
 class Container extends \SplDoublyLinkedList {
 
     /**
@@ -48,6 +51,8 @@ class Container extends \SplDoublyLinkedList {
     }
 
     /**
+     * Get the sizes in bytes of each contained byte string
+     *
      * @return array
      */
     public function getSizes()
@@ -60,46 +65,50 @@ class Container extends \SplDoublyLinkedList {
     }
 
     /**
-     * Get binary string containing all bytes in container
+     * Get binary string representation of the contents
      *
      * @return string
      */
-    public function toBytes()
+    public function toBinary()
     {
-        $bytes = '';
+        $bin = implode(',', $this->getSizes()) . '|';
         foreach ($this as $bs) {
-            $bytes .= $bs->getBytes();
+            $bin .= $bs->getBytes();
         }
-        return $bytes;
+        return $bin;
     }
 
     /**
-     * Build a container from a string of bytes
+     * Create a container from a binary representation
      *
-     * @param string $bytes
-     * @param array $sizes
+     * @param $binary
      * @return false|Container
      */
-    public static function fromBytes($bytes, array $sizes)
+    public static function fromBinary($binary)
     {
-        if (strlen($bytes) !== array_sum($sizes)) {
+        $pieces = explode('|', $binary, 2);
+        if (count($pieces) !== 2) {
+            return false;
+        }
+        $sizes = explode(',', $pieces[0]);
+        if (strlen($pieces[1]) !== array_sum($sizes)) {
             return false;
         }
         $offset = 0;
         $cont = new self();
         foreach ($sizes as $size) {
-            $cont[] = new ByteString(substr($bytes, $offset, $size));
+            $cont[] = new ByteString(substr($pieces[1], $offset, $size));
             $offset += $size;
         }
         return $cont;
     }
 
     /**
-     * @param array $byteStrings array of ByteStrings
+     * @param array|ByteString $byteStrings array of ByteStrings
      */
-    public function __construct(array $byteStrings = array())
+    public function __construct($byteStrings = array())
     {
-        foreach ($byteStrings as $bs) {
+        foreach ((array) $byteStrings as $bs) {
             $this->push($bs);
         }
     }
@@ -107,7 +116,7 @@ class Container extends \SplDoublyLinkedList {
     public function push($value)
     {
         if (! $value instanceof ByteString) {
-            throw new InvalidArgumentException('Container accepts only ByteStrings');
+            throw new \InvalidArgumentException('Container accepts only ByteStrings');
         }
         parent::push($value);
     }
@@ -115,7 +124,7 @@ class Container extends \SplDoublyLinkedList {
     public function unshift($value)
     {
         if (! $value instanceof ByteString) {
-            throw new InvalidArgumentException('Container accepts only ByteStrings');
+            throw new \InvalidArgumentException('Container accepts only ByteStrings');
         }
         parent::unshift($value);
     }
@@ -123,7 +132,7 @@ class Container extends \SplDoublyLinkedList {
     public function offsetSet($index, $value)
     {
         if (! $value instanceof ByteString) {
-            throw new InvalidArgumentException('Container accepts only ByteStrings');
+            throw new \InvalidArgumentException('Container accepts only ByteStrings');
         }
         parent::offsetSet($index, $value);
     }

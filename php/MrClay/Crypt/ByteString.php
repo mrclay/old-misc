@@ -2,10 +2,13 @@
 
 namespace MrClay\Crypt;
 
+/**
+ * Simple container for a binary string.
+ */
 class ByteString {
 
     /**
-     * @param $bytes
+     * @param string $bytes
      */
     public function __construct($bytes)
     {
@@ -27,7 +30,7 @@ class ByteString {
             $bytes = fread($fh, $size);
             fclose($fh);
         } else {
-            // brute
+            // as good as we can do, algorithm from PHPass
             $randomState = microtime();
             if (function_exists('getmypid')) {
                 $randomState .= getmypid();

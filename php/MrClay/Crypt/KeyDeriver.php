@@ -6,19 +6,41 @@ use MrClay\Crypt\ByteString;
 
 class KeyDeriver {
 
+    /**
+     * Number of block HMAC iterations to perform
+     *
+     * @var int
+     */
     public $numIterations = 5000;
 
+    /**
+     * Size of desired key, in bytes
+     *
+     * @var int
+     */
     public $keyLength = 32;
 
+    /**
+     * Algorithm to use in HMAC calculations
+     *
+     * @var string
+     */
     public $hashAlgo = 'sha256';
 
+    /**
+     * Length of salt to generate (if not provided), in bytes
+     *
+     * @var int
+     */
     public $saltLength = 16;
 
     /**
      * Create key from a password using PBKDF2 (described in RFC 2898)
      *
      * @param string $password
+     *
      * @param ByteString $salt (optional)
+     *
      * @return array [key, salt]
      *
      * @author Andrew Johnson
