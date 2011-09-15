@@ -1,9 +1,12 @@
 <?php
 
 /**
- * Send/receive HMAC signed values over HTTP POST requests
- *
  * @deprecated use MrClay\Crypt\SignedRequest
+ *
+ *
+ *
+ *
+ * Send/receive HMAC signed values over HTTP POST requests
  */
 class MrClay_Hmac_SignedRequest {
 
@@ -33,6 +36,8 @@ class MrClay_Hmac_SignedRequest {
             $hmac = $secret;
         } elseif (is_string($secret)) {
             $hmac = new MrClay_Hmac($secret);
+        } else {
+            throw new Exception('No secret or MrClay_Hmac provided');
         }
         $this->hmac = $hmac;
     }
@@ -88,6 +93,7 @@ class MrClay_Hmac_SignedRequest {
     public function encode($value)
     {
         $json = json_encode($value);
+        $data = array();
         list($data['value'], $data['salt'], $data['hash']) = $this->hmac->sign($json);
         return $this->hmac->base64urlEncode($json) . '.' . $data['salt'] . '.' . $data['hash'];
     }

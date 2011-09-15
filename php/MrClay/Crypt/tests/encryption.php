@@ -1,7 +1,7 @@
 <?php
 
 require __DIR__ . '/../../Loader.php';
-MrClay_Loader::register();
+MrClay_Loader::getInstance()->register();
 
 header('Content-Type: text/plain');
 

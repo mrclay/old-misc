@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * @deprecated use MrClay\Crypt\Hmac
+ *
+ *
+ *
  * Wrapper around HMAC sign/verify process with unique salts and more compact salt/hashes.
  * 
  * USAGE
@@ -18,8 +22,6 @@
  * 
  * @author Steve Clay <steve@mrclay.org>
  * @license http://www.opensource.org/licenses/mit-license.php  MIT License
- *
- * @deprecated use MrClay\Crypt\Hmac
  */
 class MrClay_Hmac {
 
