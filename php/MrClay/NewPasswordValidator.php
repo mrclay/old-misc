@@ -2,6 +2,14 @@
 
 namespace MrClay;
 
+/**
+ * Validate new user-given passwords against common password lists/entropy/"strength"/or custom validators.
+ *
+ * USAGE: instantiate, add some constraints, call isValid()
+ *
+ * @throws \Exception
+ * @link http://www.skullsecurity.org/wiki/index.php/Passwords
+ */
 class NewPasswordValidator {
 
     const REASON_UNKNOWN = 'unknown';
