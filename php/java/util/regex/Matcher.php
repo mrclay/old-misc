@@ -133,7 +133,7 @@ class Matcher {
 
     /**
      * Returns the match state of this matcher
-     * @return MrClay_MatchResult
+     * @return MatchResult
      */
     public function toMatchResult()
     {
@@ -143,7 +143,7 @@ class Matcher {
     /**
      * Changes the Pattern that this Matcher uses to find matches with.
      * @param Pattern $newPattern
-     * @return MrClay_Matcher
+     * @return Matcher
      */
     public function usePattern(Pattern $newPattern)
     {
@@ -285,7 +285,7 @@ class Matcher {
      * Implements a non-terminal append-and-replace step.
      * @param StringBuilder $sb
      * @param StringBuilder $replacement
-     * @return MrClay_Matcher
+     * @return Matcher
      */
     public function appendReplacement(StringBuilder $sb, StringBuilder $replacement)
     {
@@ -406,7 +406,7 @@ class Matcher {
      * Sets the limits of this matcher's region.
      * @param int $start
      * @param int $end
-     * @return MrClay_Matcher
+     * @return Matcher
      */
     public function region($start, $end)
     {
@@ -446,7 +446,7 @@ class Matcher {
     /**
      * Sets the transparency of region bounds for this matcher.
      * @param bool $b
-     * @return MrClay_Matcher
+     * @return Matcher
      */
     public function useTransparentBounds($b)
     {
@@ -466,7 +466,7 @@ class Matcher {
     /**
      * Sets the anchoring of region bounds for this matcher.
      * @param bool $b
-     * @return MrClay_Matcher
+     * @return Matcher
      */
     public function useAnchoringBounds($b)
     {
