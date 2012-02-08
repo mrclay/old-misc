@@ -18,6 +18,7 @@ class NewPasswordValidator {
     const REASON_TOO_WEAK = 'too weak';
     const REASON_INSUFFICIENT_ENTROPY = 'insufficient entropy';
     const REASON_FAILED_VALIDATOR = 'failed validator';
+    const REASON_MISSING_REQUIRED_CHARS = 'missing required chars';
 
     /**
      * @var array
@@ -53,6 +54,22 @@ class NewPasswordValidator {
      * @var array
      */
     protected $_validators = array();
+
+    /**
+     * @var array
+     */
+    protected $_requiredCharValidators = array();
+
+    /**
+     * @param string $chars UTF-8 encoded list of chars
+     * @param int $numRequired
+     * @return NewPasswordValidator
+     */
+    public function requireCharsIn($chars, $numRequired = 1)
+    {
+        $this->_requiredCharValidators[] = array($chars, $numRequired);
+        return $this;
+    }
 
     /**
      * @throws \Exception
@@ -202,6 +219,19 @@ class NewPasswordValidator {
                 ));
             }
         }
+        foreach ($this->_requiredCharValidators as $validator) {
+            list ($chars, $numRequired) = $validator;
+            // http://www.php.net/manual/en/function.mb-split.php#99851
+            $charArr = preg_split('/(?<!^)(?!$)/u', $chars);
+            str_replace($charArr, ' ', $password, $count);
+            if ($count < $numRequired) {
+                return $this->_setInvalidReason(self::REASON_MISSING_REQUIRED_CHARS, array(
+                    'required chars' => $chars,
+                    'num_required' => $numRequired,
+                    'num_found' => $count,
+                ));
+            }
+        }
         foreach ($this->_validators as $validator) {
             list($type, $thing) = $validator;
             if ($type === 'callable') {
@@ -222,7 +252,7 @@ class NewPasswordValidator {
     /**
      * @param string $type
      * @param array $details
-     * @return false
+     * @return bool Always returns false
      */
     protected function _setInvalidReason($type = self::REASON_UNKNOWN, array $details = array())
     {
@@ -244,7 +274,7 @@ class NewPasswordValidator {
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      * @param string $password
      * @return string|bool the file location the password was found in or false
      */
@@ -306,10 +336,10 @@ class NewPasswordValidator {
             $entropy += 4;
         }
         if ($len > 1) {
-            $entropy += max($len - 1, 7) * 2;
+            $entropy += min($len - 1, 7) * 2;
         }
         if ($len > 8) {
-            $entropy += max($len - 8, 12) * 1.5;
+            $entropy += min($len - 8, 12) * 1.5;
         }
         if ($len > 20) {
             $entropy += ($len - 20) * 1;
