@@ -61,11 +61,13 @@ class NewPasswordValidator {
     protected $_requiredCharValidators = array();
 
     /**
+     * Add a string of characters from which the given password must contain at least $numRequired
+     * 
      * @param string $chars UTF-8 encoded list of chars
      * @param int $numRequired
      * @return NewPasswordValidator
      */
-    public function requireCharsIn($chars, $numRequired = 1)
+    public function addRequiredCharacters($chars, $numRequired = 1)
     {
         $this->_requiredCharValidators[] = array($chars, $numRequired);
         return $this;
@@ -140,7 +142,7 @@ class NewPasswordValidator {
     }
 
     /**
-     * @return array
+     * @return array [string $type, array $details]
      */
     public function getReason()
     {
@@ -211,14 +213,6 @@ class NewPasswordValidator {
                 ));
             }
         }
-        if ($this->_passwordLists) {
-            $file = $this->findPassword($password);
-            if ($file) {
-                return $this->_setInvalidReason(self::REASON_FOUND_IN_LIST, array(
-                    'list file' => $file,
-                ));
-            }
-        }
         foreach ($this->_requiredCharValidators as $validator) {
             list ($chars, $numRequired) = $validator;
             // http://www.php.net/manual/en/function.mb-split.php#99851
@@ -227,8 +221,8 @@ class NewPasswordValidator {
             if ($count < $numRequired) {
                 return $this->_setInvalidReason(self::REASON_MISSING_REQUIRED_CHARS, array(
                     'required chars' => $chars,
-                    'num_required' => $numRequired,
-                    'num_found' => $count,
+                    'num required' => $numRequired,
+                    'num found' => $count,
                 ));
             }
         }
@@ -243,6 +237,14 @@ class NewPasswordValidator {
             if (! $result) {
                 return $this->_setInvalidReason(self::REASON_FAILED_VALIDATOR, array(
                     'validator' => $thing,
+                ));
+            }
+        }
+        if ($this->_passwordLists) {
+            $file = $this->findPassword($password);
+            if ($file) {
+                return $this->_setInvalidReason(self::REASON_FOUND_IN_LIST, array(
+                    'list file' => $file,
                 ));
             }
         }
