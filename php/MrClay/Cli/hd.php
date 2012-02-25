@@ -14,38 +14,39 @@ echo "Hello World" | ./hd.php -o dump.txt
 ./hd.php -i noExiste  # fails validation due to file not readable
 
 */
+require dirname(__DIR__) . '/Cli.php';
+require __DIR__ . '/Arg.php';
 
-require dirname(__DIR__) . '/CliArgs.php';
+$cli = new MrClay\Cli;
+$cli->addOptionalArg('i')->useAsInfile();
+$cli->addOptionalArg('o')->useAsOutfile();
+$cli->addOptionalArg('n')->mustHaveValue();
 
-$ca = new MrClay\CliArgs;
-$ca->addArgument('i', array('STDIN' => 1));
-$ca->addArgument('o', array('STDOUT' => 1));
-$ca->addArgument('n', array('mustHaveValue' => 1)); // bytes to copy
-
-if (! $ca->validate()) {
-    echo $ca->getErrors();
+if (! $cli->validate()) {
+    echo $cli->getErrorReport();
     echo "USAGE: ./hd.php [-n NUMBYTES] [-i INFILE] [-o OUTFILE]\n";
+    echo "EXAMPLE: echo \"Hello World\" | ./hd.php\n";
     exit(0);
 }
 
     
-if ($ca->values['o']) {
+if ($cli->values['o']) {
     // we know output is written to file $ca->values['o'] so it's safe to echo
     
-    if ($ca->values['i']) {
+    if ($cli->values['i']) {
         // we know input is read from file $ca->values['i']
-        echo "We will read bytes from " . $ca->values['i'] . "\n";
+        echo "We will read bytes from " . $cli->values['i'] . "\n";
     }
     
-    echo "We will save the hexdump to " . $ca->values['o'] . "\n";
+    echo "We will save the hexdump to " . $cli->values['o'] . "\n";
 }
 
 // identical handling of streams and files
-$in = $ca->openInput();
-$out = $ca->openOutput();
+$in = $cli->openInput();
+$out = $cli->openOutput();
 
-$maxLength = is_string($ca->values['n'])
-    ? (int)$ca->values['n']
+$maxLength = is_string($cli->values['n'])
+    ? (int)$cli->values['n']
     : -1;
 
 $i = 0;
@@ -59,9 +60,9 @@ while ((false !== ($char = fgetc($in)))) {
 }
 fwrite($out, "\n");
 
-if ($ca->values['o']) {
+if ($cli->values['o']) {
     echo "Processed $i bytes.\n";
 }
 
-$ca->closeInput();
-$ca->closeOutput();
+$cli->closeInput();
+$cli->closeOutput();
