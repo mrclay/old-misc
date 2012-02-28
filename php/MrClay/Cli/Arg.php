@@ -6,15 +6,13 @@ namespace MrClay\Cli;
  * An argument for a CLI app. This specifies the argument, what values it expects and
  * how it's treated during validation.
  *
- * By default, the argument will be assumed to be a letter flag with no value following.
+ * By default, the argument will be assumed to be an optional letter flag with no value following.
  *
  * If the argument may receive a value, call mayHaveValue(). If there's whitespace after the
  * flag, the value will be returned as true instead of the string.
  *
- * If the argument is required, or mustHaveValue() is called, the value will be required and
- * whitespace is permitted between the flag and its value.
- *
- * If the argument AND string BOTH must be present for validation, call assertRequired().
+ * If the argument MUST be accompanied by a value, call mustHaveValue(). In this case, whitespace
+ * is permitted between the flag and its value.
  *
  * Use assertFile() or assertDir() to indicate that the argument must return a string value
  * specifying a file or directory. During validation, the value will be resolved to a
@@ -31,7 +29,6 @@ namespace MrClay\Cli;
  * @method \MrClay\Cli\Arg assertReadable() Assert that the specified file/dir must be readable
  * @method \MrClay\Cli\Arg assertWritable() Assert that the specified file/dir must be writable
  *
- * @property-read bool isRequired
  * @property-read bool mayHaveValue
  * @property-read bool mustHaveValue
  * @property-read bool assertFile
@@ -60,27 +57,25 @@ class Arg {
     }
 
     /**
-     * @var string
-     */
-    protected $letter;
-
-    /**
      * @var array
      */
     protected $spec = array();
 
+    /**
+     * @var bool
+     */
     protected $required = false;
 
     /**
-     * @param string $letter
+     * @var string
+     */
+    protected $description = '';
+
+    /**
      * @param bool $isRequired
      */
-    public function __construct($letter, $isRequired = false)
+    public function __construct($isRequired = false)
     {
-        if (! preg_match('/^[a-zA-Z]$/', $letter)) {
-            throw new \InvalidArgumentException('$letter must be in [a-zA-z]');
-        }
-        $this->letter = $letter;
         $this->spec = $this->getDefaultSpec();
         $this->required = (bool) $isRequired;
         if ($isRequired) {
@@ -113,19 +108,37 @@ class Arg {
     }
 
     /**
-     * @return mixed
-     */
-    public function getLetter()
-    {
-        return $this->letter;
-    }
-
-    /**
      * @return array
      */
     public function getSpec()
     {
         return $this->spec;
+    }
+
+    /**
+     * @param string $desc
+     * @return Arg
+     */
+    public function setDescription($desc)
+    {
+        $this->description = $desc;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRequired()
+    {
+        return $this->required;
     }
 
     /**
@@ -155,8 +168,6 @@ class Arg {
     {
         if (array_key_exists($name, $this->spec)) {
             return $this->spec[$name];
-        } elseif ($name === 'isRequired') {
-            return $this->required;
         }
         return null;
     }

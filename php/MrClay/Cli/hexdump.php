@@ -32,16 +32,9 @@ if (! $cli->validate()) {
 
 $outfile = $cli->values['o'];
 $infile = $cli->values['i'];
-$length = $cli->values['n'];
-$start = $cli->values['s'];
+$length = is_string($cli->values['n']) ? $cli->values['n'] : false;
+$start = is_string($cli->values['s']) ? $cli->values['s'] : false;
 $canonical = $cli->values['C'];
-
-$length = is_string($length)
-    ? (int)$length
-    : false;
-$start = is_string($start)
-    ? (int)$start
-    : false;
 
 // identical handling of streams and files
 $in = $cli->openInput();
@@ -73,9 +66,8 @@ if ($in) {
     };
 
     $currentByte = 0;
-    if (! feof($in)) {
+    if ($start && ! feof($in)) {
         fread($in, $start); // eat bytes
-        $currentByte += $start;
     }
     while (! feof($in)) {
         $chars = fread($in, $bytesPerLine);
