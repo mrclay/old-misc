@@ -3,11 +3,12 @@
 namespace MrClay;
 
 /**
- * Allows resending the current request internally (sending the browser's cookies and
- * headers). E.g. Your framework won't allow you to capture the ceomplete rendered page 
- * before it's sent out, but you need this to generate a PDF version.
+ * Allows you to resend/proxy a received request, including cookies and other headers. You may
+ * alter the URL or other headers before sending the internal request. If you send an identical
+ * request to the same URL, a mechanism is provided to prevent an infinite loop of requests.
  * 
  * <code>
+ * // capture the output of THIS script in a separate process.
  * $result = $replay->sendRequest();
  * if ($result) {
  *     // do stuff with $result['content'], etc.
