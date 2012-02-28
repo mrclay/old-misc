@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class MrClay_QAD_ErrorController extends Zend_Controller_Action {
 
     public function errorAction()

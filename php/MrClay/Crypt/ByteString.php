@@ -4,6 +4,9 @@ namespace MrClay\Crypt;
 
 /**
  * Simple container for a binary string.
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class ByteString {
 

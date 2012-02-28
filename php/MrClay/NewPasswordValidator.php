@@ -9,6 +9,9 @@ namespace MrClay;
  *
  * @throws \Exception
  * @link http://www.skullsecurity.org/wiki/index.php/Passwords
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class NewPasswordValidator {
 

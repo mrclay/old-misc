@@ -1,5 +1,6 @@
 <?php
 /*
+ *
 
 SETUP
 
@@ -16,7 +17,9 @@ function COE_shortcodeProxy_page_accordion($atts, $content = null) {
 }
 add_shortcode("page_accordion", 'COE_shortcodeProxy_page_accordion');
 
-*/
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class Coewp_ShortCode_PageAccordion extends Coewp_ShortCode_Accordion {
 
     /**

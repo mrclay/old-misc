@@ -6,6 +6,9 @@ use java\lang\StringBuilder;
 /**
  * WARNING! This is an attempt to port java.util.regex.Pattern. It's probably full of bugs.
  * Don't use it.
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Pattern {
 

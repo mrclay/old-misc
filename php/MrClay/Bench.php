@@ -11,6 +11,9 @@
  *
  * var_export($bench->elapsedTimes);
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_Bench {
 

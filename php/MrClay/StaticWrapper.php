@@ -30,6 +30,9 @@
  * doWork($worker); // says Hello
  *
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 abstract class MrClay_StaticWrapper {
     

@@ -7,6 +7,9 @@ use MrClay\Crypt\KeyDeriver;
 
 /**
  * Block cipher base class, a more OO approach to the Mcrypt lib.
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 abstract class Base {
 

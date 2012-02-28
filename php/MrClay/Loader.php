@@ -13,6 +13,9 @@
  * require 'path/to/MrClay/Loader.php';
  * MrClay_Loader::getInstance()->register();
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_Loader {
 

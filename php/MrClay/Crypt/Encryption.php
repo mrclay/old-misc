@@ -12,6 +12,9 @@ use MrClay\Crypt\ByteString;
  *
  * The default cipher is AES-256 (aka Rijndael-256) in counter mode.
  * @link http://www.daemonology.net/blog/2009-06-11-cryptographic-right-answers.html
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Encryption {
 

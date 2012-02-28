@@ -13,6 +13,9 @@
  * 
  * Designed ~2005, minor PHP5 cleanup 2008-10-12,
  * added renderer and processor 2010-06-14
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_LiveOutput {
 

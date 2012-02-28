@@ -1,5 +1,6 @@
 <?php
 /*
+ *
 
 SETUP
 
@@ -12,7 +13,9 @@ function COE_shortcodeProxy_accordion($atts, $content = null) {
 }
 add_shortcode("accordion", 'COE_shortcodeProxy_accordion');
 
-*/
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class Coewp_ShortCode_Accordion {
 
     public $titleHtml = 'more...';

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class MrClay_LinkHelper_ListItem extends MrClay_LinkHelper_LinkOrWrapper {
     public $liCurrentClass = 'current';
 

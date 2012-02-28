@@ -10,6 +10,9 @@
  *     Coewp_JsonApi::sendOne();
  * }
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Coewp_JsonApi {
     public static function sendOne()

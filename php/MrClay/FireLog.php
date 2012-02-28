@@ -21,6 +21,9 @@
  * $log->send('Hello from the group.');
  * $log->groupEnd();
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_FireLog {
 

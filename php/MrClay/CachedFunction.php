@@ -12,7 +12,9 @@
  *
  * Function calls may also be queued to run after output is sent to the browser,
  * so no clients have to wait for the return.
- * 
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_CachedFunction {
     private $_callback = null;

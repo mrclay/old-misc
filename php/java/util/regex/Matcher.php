@@ -10,7 +10,10 @@ use java\lang\StringBuilder;
  * NOTE! Since preg_match returns byte offsets, all offsets/indexes internally and returned
  * via start()/end() are byte locations in the UTF-8 strings, not proper String indexes.
  *
- * @throws InvalidArgumentException|RuntimeException
+ * @throws \InvalidArgumentException|\RuntimeException
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Matcher {
 
@@ -291,7 +294,7 @@ class Matcher {
     {
         // If no match, return error
         if ($this->first < 0)
-            throw new RuntimeException("No match available");
+            throw new \RuntimeException("No match available");
 
         // Process substitution string to replace group references with groups
         $cursor = 0;
@@ -310,7 +313,7 @@ class Matcher {
                 // The first number is always a group
                 $refNum = (int) $replacement->charAt($cursor) - '0';
                 if (($refNum < 0) || ($refNum > 9))
-                    throw new InvalidArgumentException(
+                    throw new \InvalidArgumentException(
                             "Illegal group reference");
                 $cursor++;
 

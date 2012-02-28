@@ -15,6 +15,9 @@
  * $html->set_whiteSpace(true);
  * echo $html->build_table_from_assoc_array($resultArray);
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_Html {
 	public $charset = 'UTF-8';	// see http://php.net/htmlspecialchars

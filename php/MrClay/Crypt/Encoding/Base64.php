@@ -4,6 +4,10 @@ namespace MrClay\Crypt\Encoding;
 
 use MrClay\Crypt\ByteString;
 
+/**
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class Base64 implements EncodingInterface {
     /**
      * @param \MrClay\Crypt\ByteString $bytes

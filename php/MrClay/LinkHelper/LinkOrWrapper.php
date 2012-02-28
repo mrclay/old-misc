@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class MrClay_LinkHelper_LinkOrWrapper extends MrClay_LinkHelper {
     public $wrapperElement = 'strong';
     public $keepWrapperAttrs = array('id', 'class');

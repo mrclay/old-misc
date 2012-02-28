@@ -3,8 +3,8 @@
 /**
  * A one-day experiment in writing my own clone of SimpleTest: June 2010
  *
- * @author Steve Clay
- * @link http://mrclay.org/
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_Minitest {
     public static function runOne($className, MrClay_Minitest_CaseRenderer $renderer = null)

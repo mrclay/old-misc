@@ -37,6 +37,9 @@ namespace MrClay\Cli;
  * @property-read bool assertWritable
  * @property-read bool useAsInfile
  * @property-read bool useAsOutfile
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Arg {
     /**
@@ -85,7 +88,7 @@ class Arg {
 
     /**
      * Assert that the argument's value points to a writable file. When
-     * CliArgs::openOutput() is called, a write pointer to this file will
+     * Cli::openOutput() is called, a write pointer to this file will
      * be provided.
      * @return Arg
      */
@@ -97,7 +100,7 @@ class Arg {
 
     /**
      * Assert that the argument's value points to a readable file. When
-     * CliArgs::openInput() is called, a read pointer to this file will
+     * Cli::openInput() is called, a read pointer to this file will
      * be provided.
      * @return Arg
      */
@@ -142,6 +145,8 @@ class Arg {
     }
 
     /**
+     * Note: magic methods declared in class PHPDOC
+     *
      * @param string $name
      * @param array $args
      * @return Arg
@@ -161,6 +166,8 @@ class Arg {
     }
 
     /**
+     * Note: magic properties declared in class PHPDOC
+     *
      * @param string $name
      * @return bool|null
      */

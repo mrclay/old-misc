@@ -2,7 +2,8 @@
 /**
  * Class MrClay_Template
  *
- * @package MrClay
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 
 require_once 'Savant3.php';

@@ -4,6 +4,9 @@
  * Proof of concept to allow creating a ZF app from a single file using
  * view and layout objects that get content from function calls instead of
  * script includes
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_QAD_App {
 

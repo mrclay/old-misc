@@ -3,10 +3,10 @@
 /**
  * @deprecated use MrClay\Crypt\SignedRequest
  *
- *
- *
- *
  * Send/receive HMAC signed values over HTTP POST requests
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_Hmac_SignedRequest {
 

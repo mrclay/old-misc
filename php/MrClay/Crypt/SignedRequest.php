@@ -6,6 +6,9 @@ use MrClay\Crypt\Hmac;
 
 /**
  * Send/receive HMAC signed values (JSON-encoded) over HTTP POST requests
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class SignedRequest {
 

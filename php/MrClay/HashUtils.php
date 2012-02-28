@@ -14,6 +14,9 @@
  * @link http://en.wikipedia.org/wiki/Rainbow_table#Defense_against_rainbow_tables
  * 
  * @deprecated use MrClay_Hmac
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_HashUtils {
     

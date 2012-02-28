@@ -16,6 +16,9 @@
  * // condense/simplify the returned array if possible
  * NwsForecast::arrayFromZip(32609, 'temp dew pop12', NwsForecast::MODE_SIMPLIFY);
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class NwsForecast {
     

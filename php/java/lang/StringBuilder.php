@@ -4,6 +4,9 @@ namespace java\lang;
 
 /**
  * A port of java.lang.StringBuilder, (but also with most String methods). It probably has bugs.
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class StringBuilder {
     /**

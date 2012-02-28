@@ -31,6 +31,9 @@ if (! defined('UTF8')) {
  *     echo $ucTitle->_; // 'Āll Īs &amp; Ōk'
  * }
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Utf8String {
     

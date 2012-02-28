@@ -5,8 +5,8 @@
  * the current requested page. Only detects the current page on root-relative
  * URIs or full URLs, not path-relative URIs.
  *
- * @author Steve Clay
- * @link http://mrclay.org/
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  * @abstract
  */
 abstract class MrClay_LinkHelper {

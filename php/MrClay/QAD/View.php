@@ -3,6 +3,9 @@
 /**
  * View that renders via calling a callback function instead of including a
  * script.
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_QAD_View extends Zend_View {
 

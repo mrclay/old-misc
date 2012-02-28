@@ -12,6 +12,9 @@
  * callDerivative() evaluates the derivative w/r/t Tw at Tw
  *
  * @link http://en.wikipedia.org/wiki/Wet-bulb_temperature
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_RootFinder_WetBulb {
     public $t2m = null;
@@ -23,7 +26,7 @@ class MrClay_RootFinder_WetBulb {
      * @param float $vp				water vapor pressure (mb)
      * @param float $bp				optional station pressure (mb)
      */
-    public function __construct($t2m, $vp, $bp = 1013)
+    public function __construct($t2m, $vp, $bp = 1013.0)
     {
         $this->t2m = $t2m;
         $this->vp = $vp;

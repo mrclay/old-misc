@@ -17,6 +17,9 @@
  * $tz = new MrClay_TimeZone('America/New_York');
  * echo $tz->date('G', $time); // echoes '9'
  * </code>
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_TimeZone {
 

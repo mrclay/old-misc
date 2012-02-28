@@ -2,6 +2,9 @@
 
 /** 
  * Utilities for debugging strings in a more readable way
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class MrClay_StringDebug {
     
@@ -14,7 +17,7 @@ class MrClay_StringDebug {
      * 
      * @param string $str a string
      * 
-     * @param bool (default true) escape bytes with values above 127. If set to
+     * @param bool $escapeUpper128 (default true) escape bytes with values above 127. If set to
      * false, bytes with values above 127 will be preserved. E.g. UTF-8 or other
      * supersets of US-ASCII will be left as is. By default the resulting string
      * will be "7-bit clean"
@@ -74,7 +77,7 @@ class MrClay_StringDebug {
      * 
      * @param string $str UTF-8 encoded string
      * 
-     * @param bool (default false) should output be XHTML?
+     * @param bool $xhtml (default false) should output be XHTML?
      * 
      * @return string (X)HTML markup
      */
@@ -237,7 +240,7 @@ class MrClay_StringDebug {
                     + ($ord2-128)*262144 
                         + ($ord3-128)*4096 
                             + ($ord4-128)*64 
-                                + (ord($c{5})-128);
+                                + (ord($chr{5})-128);
         }
         if ( $ord0 >= 254 && $ord0 <= 255 ) { 
             trigger_error('Invalid UTF-8 with surrogate ordinal '.$ord0);

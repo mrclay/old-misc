@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ */
 class MrClay_FireLog_Writer extends Zend_Log_Writer_Firebug {
 
     protected $_wildfireChannel;

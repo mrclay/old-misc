@@ -6,6 +6,9 @@ use MrClay\Crypt\ByteString;
 
 /**
  * @link http://en.wikipedia.org/wiki/Base64#URL_applications
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Base64Url implements EncodingInterface {
     /**

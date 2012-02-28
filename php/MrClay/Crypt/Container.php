@@ -7,6 +7,9 @@ use MrClay\Crypt\Encoding\Base64Url;
 
 /**
  * A container for a list of binary strings. Can be easily encoded to an ASCII environment, or to binary
+ *
+ * @author Steve Clay <steve@mrclay.org>
+ * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
 class Container extends \SplDoublyLinkedList {
 
