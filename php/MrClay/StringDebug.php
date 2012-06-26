@@ -72,6 +72,28 @@ class MrClay_StringDebug {
     }
     
     /**
+     * Get lines for use in a strtr mapping from accented to non-accented chars.
+     * 
+     * @param array $map 
+     *
+     * @return string
+     */
+    static public function exportTrMap(array $map)
+    {
+        $odd = true;
+        $str = '';
+        foreach ($map as $k => $v) {
+            $str .= $odd ? "\t" : ' ';
+            $str .= self::export($k) . " /* $k */ => " . var_export($v, true) . ",";
+            if (!$odd) {
+                $str .= "\n";
+            }
+            $odd = !$odd;
+        }
+        return $str;
+    }
+    
+    /**
      * Get an (X)HTML rendering of a UTF-8 string with all non-printable US-ASCII
      * characters linked to their Unicode code points.
      * 
