@@ -70,25 +70,32 @@ class MrClay_StringDebug {
         }
         return $ret . '"';
     }
-    
+
     /**
      * Get lines for use in a strtr mapping from accented to non-accented chars.
-     * 
-     * @param array $map 
+     *
+     * @param array $map
+     *
+     * @param int $numCols
      *
      * @return string
      */
-    static public function exportTrMap(array $map)
+    static public function exportTrMap(array $map, $numCols = 2)
     {
-        $odd = true;
+        $col = 0;
         $str = '';
         foreach ($map as $k => $v) {
-            $str .= $odd ? "\t" : ' ';
-            $str .= self::export($k) . " /* $k */ => " . var_export($v, true) . ",";
-            if (!$odd) {
+            $str .= ($col === 0) ? "\t" : ' ';
+            $exported = self::export($k);
+            $str .= $exported;
+            if ("\"$k\"" !== $exported) {
+                $str .= " /* $k */";
+            }
+            $str .= " => " . var_export($v, true) . ",";
+            if ($col === ($numCols - 1)) {
                 $str .= "\n";
             }
-            $odd = !$odd;
+            $col = ($col + 1) % $numCols;
         }
         return $str;
     }
