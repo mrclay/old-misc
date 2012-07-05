@@ -77,9 +77,13 @@ class MrClay_JsonFormatter {
                 $i = $jsonIdx + 1;
                 $str = '';
                 while (true) {
-                    if ($json[$i] === "\\" && $json[$i+1] === '"') {
+                    if ($json[$i] === '\\' && $json[$i+1] === '"') {
                         // copy as is
                         $str .= '\\"';
+                        $i += 2;
+                    } elseif ($json[$i] === '\\' && $json[$i+1] === '\\') {
+                        // copy as is
+                        $str .= '\\\\';
                         $i += 2;
                     } elseif ($json[$i] === '"') {
                         // end string
