@@ -3,7 +3,7 @@
 require __DIR__ . '/../../Loader.php';
 MrClay_Loader::getInstance()->register();
 
-function dump($name, $val) { echo "<p><b>" . h($name) . "</b> = <tt>" . h(var_export($val, true)) . "</tt></p>"; }
+function dump($name, $val) { echo "<pre><b>" . h($name) . "</b> = " . h(var_export($val, true)) . "</pre>"; }
 function h($txt) { return htmlspecialchars($txt, ENT_QUOTES, 'UTF-8'); }
 
 $password = "Just a really bad password";
