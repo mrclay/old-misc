@@ -2,6 +2,7 @@
 
 namespace MrClay\Crypt;
 
+use MrClay\Crypt\EncodedRequest;
 use MrClay\Crypt\Hmac;
 
 /**
@@ -10,24 +11,12 @@ use MrClay\Crypt\Hmac;
  * @author Steve Clay <steve@mrclay.org>
  * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
-class SignedRequest {
+class SignedRequest extends EncodedRequest {
 
     /**
      * @var \MrClay\Crypt\Hmac
      */
     protected $hmac;
-
-    /**
-     * @var string
-     */
-    public $error = '';
-
-    /**
-     * Name the encoded value is posted/received under
-     *
-     * @var string
-     */
-    public $varName = 'req';
 
     /**
      * @param string|\MrClay\Crypt\Hmac $password
@@ -39,49 +28,6 @@ class SignedRequest {
         } else {
             $this->hmac = new Hmac($password);
         }
-    }
-
-    /**
-     * Send a POST request containing the signed value
-     *
-     * @param mixed $value
-     *
-     * @param $url
-     *
-     * @return string the returned response body
-     */
-    public function send($value, $url)
-    {
-        $data[$this->varName] = $this->encode($value);
-        $ctx = stream_context_create(array(
-            'http' => array(
-                'method' => 'POST',
-                'content' => http_build_query($data),
-                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
-            )
-        ));
-        return file_get_contents($url, false, $ctx);
-    }
-
-    /**
-     * Get validate a value from a signed HTTP request
-     *
-     * @param array $requestData
-     *
-     * @param bool $returnJson return JSON instead of value in 2nd position
-     *
-     * @return array [isValid, value]
-     */
-    public function receive($requestData = null, $returnJson = false)
-    {
-        if (! $requestData) {
-            $requestData = $_REQUEST;
-        }
-        if (empty($requestData[$this->varName]) || ! is_string($requestData[$this->varName])) {
-            $this->error = "Value not present in request data or is not string";
-            return array(false, null);
-        }
-        return $this->decode($requestData[$this->varName], $returnJson);
     }
 
     /**
