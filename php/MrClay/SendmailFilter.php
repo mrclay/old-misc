@@ -86,7 +86,12 @@ class MrClay_SendmailFilter {
             $lines = (array) $headers[$key];
             $addrs = array();
             foreach ($lines as $line) {
+                // eliminate names in strings, which may contain commas
+                $line = preg_replace('~"[^"]*"~', '', $line);
+
+                // assumes that email addresses do not contain commas. Hope that's the case!
                 $addresses = explode(',', $line);
+
                 foreach ($addresses as $fullAddress) {
                     $fullAddress = trim($fullAddress);
                     $email = $fullAddress;
