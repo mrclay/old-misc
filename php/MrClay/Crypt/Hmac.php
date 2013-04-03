@@ -75,6 +75,9 @@ class Hmac {
             return false;
         }
         list($str, $salt, $mac) = $cont;
+        /* @var ByteString $str */
+        /* @var ByteString $salt */
+        /* @var ByteString $mac */
         list($key, $salt) = $this->keyDeriver->pbkdf2($this->password, $salt);
         return $this->generateMac($str->getBytes(), $key)->equals($mac);
     }

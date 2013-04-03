@@ -62,6 +62,7 @@ class Container extends \SplDoublyLinkedList {
     {
         $sizes = array();
         foreach ($this as $bs) {
+            /* @var ByteString $bs */
             $sizes[] = $bs->getSize();
         }
         return $sizes;
@@ -76,6 +77,7 @@ class Container extends \SplDoublyLinkedList {
     {
         $bin = implode(',', $this->getSizes()) . '|';
         foreach ($this as $bs) {
+            /* @var ByteString $bs */
             $bin .= $bs->getBytes();
         }
         return $bin;
