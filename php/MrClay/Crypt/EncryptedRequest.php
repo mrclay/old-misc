@@ -17,15 +17,11 @@ class EncryptedRequest extends EncodedRequest {
     protected $encryption = null;
 
     /**
-     * @param string|Encryption $password
+     * @param Encryption $encryption
      */
-    public function __construct($password)
+    public function __construct($encryption)
     {
-        if ($password instanceof Encryption) {
-            $this->encryption = $password;
-        } else {
-            $this->encryption = new Encryption($password);
-        }
+        $this->encryption = $encryption;
     }
 
     /**

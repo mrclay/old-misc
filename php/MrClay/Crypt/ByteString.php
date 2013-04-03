@@ -11,11 +11,42 @@ namespace MrClay\Crypt;
 class ByteString {
 
     /**
-     * @param string $bytes
+     * @param ByteString|string $bytes
      */
     public function __construct($bytes)
     {
-        $this->bytes = $bytes;
+        if ($bytes instanceof ByteString) {
+            $this->bytes = $bytes->getBytes();
+        } else {
+            $this->bytes = $bytes;    
+        }
+    }
+
+    /**
+     * Salt generated during the key derivation process (null if key was not derived)
+     *
+     * @var ByteString|null
+     */
+    public $passwordSalt;
+
+    /**
+     * @param string $password
+     * @param int $length
+     * @param ByteString $salt
+     * @param KeyDeriver $keyDeriver
+     * @return ByteString
+     */
+    public static function createFromPassword($password, $length = 32,
+                                        ByteString $salt = null, KeyDeriver $keyDeriver = null)
+    {
+        if (! $keyDeriver) {
+            $keyDeriver = new KeyDeriver();
+        }
+        $keyDeriver->keyLength = $length;
+        list($key, $salt) = $keyDeriver->pbkdf2($password, $salt);
+        $return = new self($key);
+        $return->passwordSalt = $salt;
+        return $return;
     }
 
     /**

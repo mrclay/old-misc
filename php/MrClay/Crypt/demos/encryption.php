@@ -1,19 +1,18 @@
 <?php
 
+use MrClay\Crypt\ByteString;
+use MrClay\Crypt\Encryption;
+
 require __DIR__ . '/../../Loader.php';
 MrClay_Loader::getInstance()->register();
 
 header('Content-Type: text/plain');
 
-$password = "Just a really bad password";
+$key = ByteString::rand(32);
 
 $encoding = new MrClay\Crypt\Encoding\Base64Url();
 
-// let's make a good string key (won't directly be used to encrypt)
-$key = \MrClay\Crypt\ByteString::rand(64);
-$key = $key->getBytes();
-
-echo "key = " . base64_encode($key) . "\n\n";
+echo "key = " . $encoding->encode($key) . "\n\n";
 
 $msg = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent lorem sem, viverra vitae consectetur non, eleifend eu urna.";
 

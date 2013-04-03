@@ -12,7 +12,7 @@ use MrClay\Crypt\ByteString;
  */
 class Base64Url implements EncodingInterface {
     /**
-     * @param \MrClay\Crypt\ByteString $bytes
+     * @param ByteString $bytes
      * @return string
      */
     public function encode(ByteString $bytes)
@@ -22,7 +22,7 @@ class Base64Url implements EncodingInterface {
 
     /**
      * @param string $encoded
-     * @return false|\MrClay\Crypt\ByteString
+     * @return false|ByteString
      */
     public function decode($encoded)
     {

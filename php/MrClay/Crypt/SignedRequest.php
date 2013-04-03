@@ -14,20 +14,16 @@ use MrClay\Crypt\Hmac;
 class SignedRequest extends EncodedRequest {
 
     /**
-     * @var \MrClay\Crypt\Hmac
+     * @var Hmac
      */
     protected $hmac;
 
     /**
-     * @param string|\MrClay\Crypt\Hmac $password
+     * @param Hmac $hmac
      */
-    public function __construct($password)
+    public function __construct(Hmac $hmac)
     {
-        if ($password instanceof Hmac) {
-            $this->hmac = $password;
-        } else {
-            $this->hmac = new Hmac($password);
-        }
+        $this->hmac = $hmac;
     }
 
     /**
@@ -54,7 +50,7 @@ class SignedRequest extends EncodedRequest {
     public function decode($str, $returnJson = false)
     {
         $cont = Container::decode(new Encoding\Base64Url(), $str);
-        if (! $cont || count($cont) !== 3) {
+        if (! $cont || count($cont) !== 2) {
             $this->error = 'Invalid format';
             return array(false, null);
         }
@@ -62,6 +58,7 @@ class SignedRequest extends EncodedRequest {
             $this->error = 'Hash invalid';
             return array(false, null);
         }
+        /* @var ByteString[] $cont */
         $json = $cont[0]->getBytes();
         return array(true, $returnJson ? $json : json_decode($json, true));
     }

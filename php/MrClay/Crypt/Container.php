@@ -33,6 +33,8 @@ class Container extends \SplDoublyLinkedList {
 
     /**
      * Build a container from an encoded container string
+     * 
+     * @todo make encoding 2nd arg and default to base64url
      *
      * @param Encoding\EncodingInterface $encoding
      * @param string $encodedContainer

@@ -1,11 +1,17 @@
 <?php
 
+use MrClay\Crypt\Hmac;
+use MrClay\Crypt\SignedRequest;
+use MrClay\Crypt\ByteString;
+
 require __DIR__ . '/../../Loader.php';
 MrClay_Loader::getInstance()->register();
 
 header('Content-Type: text/plain');
 
-$hmac = new MrClay\Crypt\Hmac('password1');
+$key = ByteString::rand(32);
+
+$hmac = new Hmac($key);
 
 $signed = $hmac->sign('My important message!');
 
@@ -14,7 +20,7 @@ echo $signed->encode() . "\n\n";
 var_export($hmac->isValid($signed));
 echo "\n\n";
 
-$signedRequest = new MrClay\Crypt\SignedRequest('password1');
+$signedRequest = new SignedRequest(new Hmac($key));
 $value = array(
     'Hello' => array('world!', 42)
 );
