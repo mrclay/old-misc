@@ -79,7 +79,7 @@ class KeyDeriver {
     }
 
     /**
-     * Create key from a password using PBKDF2 (described in RFC 2898)
+     * Create key from a password using PBKDF2 but base iterations on a minimum time
      *
      * @param string $password
      *
@@ -92,7 +92,8 @@ class KeyDeriver {
         $hashSize = strlen(hash($this->hashAlgo, null, true));
         $neededBlocks = ceil($this->keySize / $hashSize);
         $key = '';
-        $endTime = microtime(true) + ($this->minimumTime / $neededBlocks);
+        $startTime = microtime();
+        $minTime = $this->minimumTime / $neededBlocks;
         $iterationsPerformed = 0;
         
         for ($blockNum = 1; $blockNum <= $neededBlocks; $blockNum++) {
@@ -112,7 +113,7 @@ class KeyDeriver {
                     // keep doing 250 more until we run out of time
                     $iterationsToPerform = 250;
                     
-                } while (microtime(true) < $endTime);
+                } while ($this->microtimeDiff($startTime) < $minTime);
                 
                 // ...add it back
                 $iterationsPerformed++;
@@ -129,5 +130,18 @@ class KeyDeriver {
         
         $key = substr($key, 0, $this->keySize);
         return array(new ByteString($key), $salt, $iterationsPerformed);
+    }
+
+    /**
+     * @param string $startMicrotime
+     * @return float
+     */
+    protected function microtimeDiff($startMicrotime) {
+        $end = microtime();
+        list($startUsec, $startSec) = explode(" ", $startMicrotime);
+        list($endUsec, $endSec) = explode(" ", $end);
+        $diffSec = intval($endSec) - intval($startSec);
+        $diffUsec = floatval($endUsec) - floatval($startUsec);
+        return floatval($diffSec) + $diffUsec;
     }
 }
