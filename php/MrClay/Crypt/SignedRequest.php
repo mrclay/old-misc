@@ -4,7 +4,7 @@ namespace MrClay\Crypt;
 
 use MrClay\Crypt\EncodedRequest;
 use MrClay\Crypt\Hmac;
-use MrClay\Crypt\ByteString;
+use MrClay\Crypt\Encoding\Base64Url;
 
 /**
  * Send/receive HMAC signed values (JSON-encoded) over HTTP POST requests
@@ -50,7 +50,7 @@ class SignedRequest extends EncodedRequest {
      */
     public function decode($str, $returnJson = false)
     {
-        $cont = Container::decode(new Encoding\Base64Url(), $str);
+        $cont = Container::decode(new Base64Url(), $str);
         if (! $cont || count($cont) !== 2) {
             $this->error = 'Invalid format';
             return array(false, null);

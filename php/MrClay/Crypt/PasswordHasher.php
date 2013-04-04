@@ -53,10 +53,7 @@ class PasswordHasher {
     public function verifyPassword($password, $hash)
     {
         $hash = explode('.', $hash);
-        if (count($hash) !== 3) {
-            return array(false, 0);
-        }
-
+        
         $enc = new Base64Url();
         $key = $enc->decode($hash[0]);
         $salt = $enc->decode($hash[1]);
