@@ -38,9 +38,9 @@ class Encryption {
         if (! $cipher) {
             $cipher = new Cipher\Rijndael256();
         }
-        $requiredLength = $cipher->getKeySize();
-        if ($this->key->getSize() < $requiredLength) {
-            throw new \InvalidArgumentException("Given key must be $requiredLength bytes");
+        $requiredSize = $cipher->getKeySize();
+        if ($this->key->getSize() < $requiredSize) {
+            throw new \InvalidArgumentException("Given key must be $requiredSize bytes");
         }
         $this->cipher = $cipher;
     }

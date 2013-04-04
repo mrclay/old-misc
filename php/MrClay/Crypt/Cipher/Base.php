@@ -59,7 +59,7 @@ abstract class Base {
         if (! $keyDeriver) {
             $keyDeriver = new KeyDeriver();
         }
-        $keyDeriver->keyLength = $this->getKeySize();
+        $keyDeriver->keySize = $this->getKeySize();
         list($key) = $keyDeriver->pbkdf2($password);
         return $key;
     }

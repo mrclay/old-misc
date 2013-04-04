@@ -11,6 +11,13 @@ namespace MrClay\Crypt;
 class ByteString {
 
     /**
+     * Salt generated during the key derivation process (null if key was not derived)
+     *
+     * @var ByteString|null
+     */
+    public $passwordSalt;
+    
+    /**
      * @param ByteString|string $bytes
      */
     public function __construct($bytes)
@@ -23,26 +30,19 @@ class ByteString {
     }
 
     /**
-     * Salt generated during the key derivation process (null if key was not derived)
-     *
-     * @var ByteString|null
-     */
-    public $passwordSalt;
-
-    /**
      * @param string $password
-     * @param int $length
+     * @param int $size key size
      * @param ByteString $salt
      * @param KeyDeriver $keyDeriver
      * @return ByteString
      */
-    public static function createFromPassword($password, $length = 32,
+    public static function createFromPassword($password, $size = 32,
                                         ByteString $salt = null, KeyDeriver $keyDeriver = null)
     {
         if (! $keyDeriver) {
             $keyDeriver = new KeyDeriver();
         }
-        $keyDeriver->keyLength = $length;
+        $keyDeriver->keySize = $size;
         list($key, $salt) = $keyDeriver->pbkdf2($password, $salt);
         $return = new self($key);
         $return->passwordSalt = $salt;
@@ -74,7 +74,7 @@ class ByteString {
      * @link https://github.com/drupal/drupal/blob/8.x/core/includes/bootstrap.inc#L1936
      * @license https://github.com/drupal/drupal/blob/8.x/core/LICENSE.txt
      */
-    public static function drupalRandomBytes($count)
+    protected static function drupalRandomBytes($count)
     {
         static $random_state, $bytes, $php_compatible;
         // Initialize on the first call. The contents of $_SERVER includes a mix of
@@ -144,33 +144,21 @@ class ByteString {
     /**
      * Compare to another ByteString, avoiding timing attacks
      * 
-     * @param ByteString $bs
-     * @return bool
-     */
-    public function equals(ByteString $bs)
-    {
-        return self::compareStrings($this->bytes, $bs->getBytes());
-    }
-
-    /**
-     * Compare two strings to avoid timing attacks
-     *
      * C function memcmp() internally used by PHP, exits as soon as a difference
      * is found in the two buffers. That makes possible of leaking
      * timing information useful to an attacker attempting to iteratively guess
      * the unknown string (e.g. password).
-     * 
+     *
      * @copyright Copyright (c) 2005-2013 Zend Technologies USA Inc. (http://www.zend.com)
      * @license   http://framework.zend.com/license/new-bsd New BSD License
-     *
-     * @param  string $expected
-     * @param  string $actual
+     * 
+     * @param ByteString $bs string to compare
      * @return bool
      */
-    public static function compareStrings($expected, $actual)
+    public function equals(ByteString $bs)
     {
-        $expected     = (string) $expected;
-        $actual       = (string) $actual;
+        $expected     = (string) $bs->getBytes();
+        $actual       = (string) $this->bytes;
         $lenExpected  = strlen($expected);
         $lenActual    = strlen($actual);
         $len          = min($lenExpected, $lenActual);

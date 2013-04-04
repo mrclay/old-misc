@@ -11,18 +11,23 @@ use MrClay\Crypt\ByteString;
 class KeyDeriver {
 
     /**
-     * Number of block HMAC iterations to perform
+     * Number of block HMAC iterations to perform. If using timed, this is the minimum
      *
      * @var int
      */
     public $numIterations = 5000;
 
     /**
+     * @var float if using timed derivation, this is the minimum runtime in seconds
+     */
+    public $minimumTime = .5;
+
+    /**
      * Size of desired key, in bytes
      *
      * @var int
      */
-    public $keyLength = 32;
+    public $keySize = 32;
 
     /**
      * Algorithm to use in HMAC calculations
@@ -32,11 +37,11 @@ class KeyDeriver {
     public $hashAlgo = 'sha256';
 
     /**
-     * Length of salt to generate (if not provided), in bytes
+     * Size of salt to generate (if not provided), in bytes
      *
      * @var int
      */
-    public $saltLength = 16;
+    public $saltSize = 16;
 
     /**
      * Create key from a password using PBKDF2 (described in RFC 2898)
@@ -53,11 +58,11 @@ class KeyDeriver {
     public function pbkdf2($password, ByteString $salt = null)
     {
         if (! $salt) {
-            $salt = ByteString::rand($this->saltLength);
+            $salt = ByteString::rand($this->saltSize);
         }
         $saltBytes = $salt->getBytes();
-        $hashLength = strlen(hash($this->hashAlgo, null, true));
-        $neededBlocks = ceil($this->keyLength / $hashLength);
+        $hashSize = strlen(hash($this->hashAlgo, null, true));
+        $neededBlocks = ceil($this->keySize / $hashSize);
         $key = '';
         for ($blockNum = 1; $blockNum <= $neededBlocks; $blockNum++) {
             // Initial hash for this block
@@ -69,7 +74,7 @@ class KeyDeriver {
             }
             $key .= $iteratedBlock;
         }
-        $key = substr($key, 0, $this->keyLength);
+        $key = substr($key, 0, $this->keySize);
         return array(new ByteString($key), $salt);
     }
 
@@ -78,22 +83,16 @@ class KeyDeriver {
      *
      * @param string $password
      *
-     * @param float $minimumSec minimum time to iterate (in seconds)
-     * 
-     * @param int $minimumIterations
-     *
      * @return array key, salt, #iterations performed 
      */
-    public function pbkdf2Timed($password, $minimumSec = .5, $minimumIterations = 5000)
+    public function pbkdf2Timed($password)
     {
-        $salt = ByteString::rand($this->saltLength);
+        $salt = ByteString::rand($this->saltSize);
         $saltBytes = $salt->getBytes();
-        $hashLength = strlen(hash($this->hashAlgo, null, true));
-        $neededBlocks = ceil($this->keyLength / $hashLength);
+        $hashSize = strlen(hash($this->hashAlgo, null, true));
+        $neededBlocks = ceil($this->keySize / $hashSize);
         $key = '';
-        $start = microtime(true);
-        $endTime = $start + ($minimumSec / $neededBlocks);
-        
+        $endTime = microtime(true) + ($this->minimumTime / $neededBlocks);
         $iterationsPerformed = 0;
         
         for ($blockNum = 1; $blockNum <= $neededBlocks; $blockNum++) {
@@ -101,7 +100,7 @@ class KeyDeriver {
             $iteratedBlock = $block = hash_hmac($this->hashAlgo, $saltBytes . pack('N', $blockNum), $password, true);
             // Perform block iterations
             if ($blockNum == 1) {
-                $iterationsToPerform = $minimumIterations;
+                $iterationsToPerform = $this->numIterations;
                 do {
                     for ($i = 1; $i < $iterationsToPerform; $i++) {
                         // XOR each iterate
@@ -109,6 +108,10 @@ class KeyDeriver {
                     }
                     // we lose count of one every time through loop
                     $iterationsPerformed += $iterationsToPerform - 1;
+                    
+                    // keep doing 250 more until we run out of time
+                    $iterationsToPerform = 250;
+                    
                 } while (microtime(true) < $endTime);
                 
                 // ...add it back
@@ -124,7 +127,7 @@ class KeyDeriver {
             $key .= $iteratedBlock;
         }
         
-        $key = substr($key, 0, $this->keyLength);
+        $key = substr($key, 0, $this->keySize);
         return array(new ByteString($key), $salt, $iterationsPerformed);
     }
 }

@@ -2,107 +2,69 @@
 
 namespace MrClay\Crypt;
 
-use MrClay\Crypt\ByteString;
 use MrClay\Crypt\Encoding\Base64Url;
+use MrClay\Crypt\KeyDeriver;
 
-/**
- * Not implemented
- */
 class PasswordHasher {
-//
-//    /**
-//     * @var int
-//     */
-//    protected $stretching = 12;
-//
-//    /**
-//     * @var int
-//     */
-//    protected $saltLength = 6;
-//
-//    /**
-//     * @var string
-//     */
-//    protected $algoKey = 'a';
-//
-//    /**
-//     * @var Base64Url
-//     */
-//    protected $encoding;
-//
-//    const STRETCHING_MIN = 7;
-//    const STRETCHING_MAX = 30;
-//
-//    /**
-//     * @return array
-//     */
-//    public function getAlgoMap()
-//    {
-//        return array(
-//            'a' => 'sha256',
-//            'b' => 'sha512',
-//            'c' => 'ripemd160',
-//            'd' => 'whirlpool',
-//        );
-//    }
-//
-//    /**
-//     * @throws \InvalidArgumentException
-//     * @param int $log2Count The log2 number of iterations for password stretching.
-//     * @return PhPass
-//     */
-//    public function setStretching($log2Count)
-//    {
-//        $log2Count = (int) $log2Count;
-//        if ($log2Count < self::STRETCHING_MIN || $log2Count > self::STRETCHING_MAX) {
-//            throw new \InvalidArgumentException('Stretching value out of range');
-//        }
-//        $this->stretching = $log2Count;
-//        return $this;
-//    }
-//
-//    /**
-//     * @throws \InvalidArgumentException
-//     * @param int $numBytes
-//     * @return PasswordHasher
-//     */
-//    public function setSaltLength($numBytes)
-//    {
-//        $numBytes = (int) $numBytes;
-//        if ($numBytes < 3 || $numBytes > 12) {
-//            throw new \InvalidArgumentException('Salt length must be within 3 and 12 bytes');
-//        }
-//        $this->saltLength = $numBytes;
-//        return $this;
-//    }
-//
-//    public function __construct()
-//    {
-//        $this->encoding = new Base64Url();
-//    }
-//
-//    public function generateHash($password)
-//    {
-//        $salt = ByteString::rand($this->saltLength);
-//        $hash = $this->digest($password, $salt, $this->algoKey, $this->stretching);
-//
-//    }
-//
-//    protected function digest($password, $salt, $algoKey, $stretchingKey)
-//    {
-//        $map = $this->getAlgoMap();
-//        if (! isset($map[$algoKey])) {
-//            return false;
-//        }
-//        $algo = $map[$algoKey];
-//
-//
-//
-//        $iterations = 1 << $stretching;
-//        $hash = hash($algo, $salt . $password, true);
-//        do {
-//            $hash = hash($algo, $hash . $password, true);
-//        } while (--$iterations);
-//        return hash;
-//    }
+
+    /**
+     * @var KeyDeriver
+     */
+    protected $keyDeriver;
+
+    /**
+     * @param KeyDeriver $keyDeriver
+     */
+    public function __construct(KeyDeriver $keyDeriver = null)
+    {
+        if (! $keyDeriver) {
+            $keyDeriver = new KeyDeriver();
+        }
+        $this->keyDeriver = $keyDeriver;
+    }
+
+    /**
+     * @param string $password
+     * @param bool $timed
+     * @return string
+     */
+    public function hashPassword($password, $timed = false)
+    {
+        if ($timed) {
+            list($key, $salt, $iterations) = $this->keyDeriver->pbkdf2Timed($password);
+        } else {
+            list($key, $salt) = $this->keyDeriver->pbkdf2($password);
+            $iterations = $this->keyDeriver->numIterations;
+        }
+        
+        $enc = new Base64Url();
+        return implode('.', array(
+            $enc->encode($key),
+            $enc->encode($salt),
+            $iterations,
+        ));
+    }
+
+    /**
+     * @param string $password
+     * @param string $hash
+     * @return array [isValid (bool), # iterations in hash]
+     */
+    public function verifyPassword($password, $hash)
+    {
+        $hash = explode('.', $hash);
+        if (count($hash) !== 3) {
+            return array(false, 0);
+        }
+
+        $enc = new Base64Url();
+        $key = $enc->decode($hash[0]);
+        $salt = $enc->decode($hash[1]);
+        $iterations = $hash[2];
+        
+        $this->keyDeriver->numIterations = $iterations;
+        list($computedKey) = $this->keyDeriver->pbkdf2($password, $salt);
+        
+        return array($key->equals($computedKey), $iterations);
+    }
 }

@@ -19,7 +19,8 @@ echo "key = " . $encoding->encode($key) . "\n";
 echo "salt = " . $encoding->encode($salt) . "\n\n\n";
 
 // hash password for ~.25 seconds
-list($key, $salt, $iterations) = $deriver->pbkdf2Timed($password, 0.25);
+$deriver->minimumTime = 0.25;
+list($key, $salt, $iterations) = $deriver->pbkdf2Timed($password);
 echo "key = " . $encoding->encode($key) . "\n";
 echo "salt = " . $encoding->encode($salt) . "\n";
 echo "iterations = " . $iterations . "\n";

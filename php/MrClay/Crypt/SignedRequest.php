@@ -4,6 +4,7 @@ namespace MrClay\Crypt;
 
 use MrClay\Crypt\EncodedRequest;
 use MrClay\Crypt\Hmac;
+use MrClay\Crypt\ByteString;
 
 /**
  * Send/receive HMAC signed values (JSON-encoded) over HTTP POST requests
