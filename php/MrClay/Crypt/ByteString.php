@@ -172,6 +172,29 @@ class ByteString {
         return ($result === 0);
     }
 
+	/**
+	 * @param string $encoding Encoding class. e.g. "Base64Url"
+	 * @return string Encoded bytes
+	 */
+	public function encode($encoding = 'Base64Url')
+	{
+		$class = "MrClay\\Crypt\\Encoding\\$encoding";
+		$encoding = new $class();
+		return $encoding->encode($this);
+	}
+
+	/**
+	 * @param string $encodedString
+	 * @param string $encoding Encoding class. e.g. "Base64Url"
+	 * @return ByteString
+	 */
+	public static function decode($encodedString, $encoding = 'Base64Url')
+	{
+		$class = "MrClay\\Crypt\\Encoding\\$encoding";
+		$encoding = new $class();
+		return new self($encoding->decode($encodedString));
+	}
+
     /**
      * @var string
      */
