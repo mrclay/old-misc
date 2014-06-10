@@ -6,7 +6,8 @@ namespace MrClay\Crypt;
  * Simple container for a binary string.
  *
  * @author Steve Clay <steve@mrclay.org>
- * @license http://www.opensource.org/licenses/mit-license.php  MIT License
+ * 
+ * Note: This includes (soon to be replaced) GPL code from Drupal, so it's GPL.
  */
 class ByteString {
 
