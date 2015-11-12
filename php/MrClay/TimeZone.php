@@ -2,17 +2,17 @@
 
 /**
  * Eases handling dates/times in different timezones by allowing you to create
- * a timezone context. This can be helpful when you need to, e.g., parse date 
+ * a timezone context. This can be helpful when you need to, e.g., parse date
  * strings created in a different timezone.
- * 
+ *
  * Currently the class only provides strtotime() and date(), but this is usually
  * sufficient.
- * 
+ *
  * <code>
  * // parse a date string from Eastern Standard Time (no DST)
  * $tz = new MrClay_TimeZone(-5);
  * $time = $tz->strtotime('2007-06-01 08:00:00');
- * 
+ *
  * // display in New York time
  * $tz = new MrClay_TimeZone('America/New_York');
  * echo $tz->date('G', $time); // echoes '9'
@@ -29,14 +29,12 @@ class MrClay_TimeZone {
 
     /**
      * Create a "timezone shift" object.
-     * 
-     * @param $tz timezone. This can either be a string as given by
+     *
+     * @param string $tz timezone. This can either be a string as given by
      * http://twiki.org/cgi-bin/xtra/tzdatepick.html or a GMT offset like -5.
      * -5 would be converted to the string "Etc/GMT+5" for you.
-     * 
-     * @param $time optional current timestamp in case you want to "set" time
-     * 
-     * @return null
+     *
+     * @param int $time optional current timestamp in case you want to "set" time
      */
     public function __construct($tz, $time = null)
     {
@@ -57,104 +55,102 @@ class MrClay_TimeZone {
     }
 
     /**
-     * Format a "local" time/date according to the timezone given in the
-     * constructor
-     * 
-     * <code>
-     * // display current New York time
-     * $tz = new MrClay_TimeZone('America/New_York');
-     * echo $tz->date('G:i:s');
-     * </code>
-     * 
-     * @see http://www.php.net/manual/en/function.date.php   
+     * Return the output of a function run with TZ set to the timezone given in the constructor.
      *
+     * @param callable $func
+     * @return mixed
+     */
+    public function inContext($func)
+    {
+        date_default_timezone_set($this->tz);
+        $ret = call_user_func($func);
+        date_default_timezone_set($this->dtz);
+
+        return $ret;
+    }
+
+    /**
+     * Format a "local" time/date according to the timezone given in the constructor.
+     *
+     * @link http://www.php.net/manual/en/function.date.php
      */
     public function date($format, $time = null)
     {
         if (null === $time) {
             $time = $this->time;
         }
-        $this->_shift();
-        return $this->_unshift(date($format, $time));
+        return $this->inContext(function () use ($format, $time) {
+            return date($format, $time);
+        });
     }
 
     /**
-     * Parse about any English textual datetime description into a Unix 
-     * timestamp. If given a date/time, it is parsed as if it is local to
+     * Parse about any English textual datetime description into a Unix timestamp local to
      * the timezone given in the constructor.
-     * 
-     * <code>
-     * // parse a date string from Eastern Standard Time (no DST)
-     * $tz = new MrClay_TimeZone(-5);
-     * $time = $tz->strtotime('2007-06-01 08:00:00');
-     * </code>
-     *  
-     * @see http://www.php.net/manual/en/function.strtotime.php   
+     *
+     * @link http://www.php.net/manual/en/function.strtotime.php
      */
     public function strtotime($strTime, $now = null)
     {
-        $this->_shift();
-        return $this->_unshift(strtotime($strTime, $now));
+        return $this->inContext(function () use ($strTime, $now) {
+            return strtotime($strTime, $now);
+        });
     }
 
     /**
-     * Set the default timezone to the user's request.
+     * Get Unix timestamp for a date in the timezone given in the constructor.
+     *
+     * @link http://php.net/manual/en/function.mktime.php
      */
-    private function _shift() {
-        date_default_timezone_set($this->tz);
+    public function mktime($h = null, $m = null, $s = null, $mm = null, $dd = null, $yy = null)
+    {
+        return $this->inContext(function () use ($h, $m, $s, $mm, $dd, $yy) {
+            return mktime($h, $m, $s, $mm, $dd, $yy);
+        });
     }
 
     /**
-     * Return the default timezone to the original value.
-     * 
-     * $val is passed through avoiding the need for a temp variable in the 
-     * calling function.  
+     * Get date/time information local to the timezone given in the constructor.
+     *
+     * @link http://php.net/manual/en/function.getdate.php
      */
-    private function _unshift($val) {
-        date_default_timezone_set($this->dtz);
-        return $val;
-    }
-    
-    /* TEST THESE
     public function getdate($time = null)
     {
         if (null === $time) {
             $time = $this->time;
         }
-        $this->shift();
-        return $this->_unshift(getdate($time));
+        return $this->inContext(function () use ($time) {
+            return getdate($time);
+        });
     }
 
+    /**
+     * Get the local time in the timezone given in the constructor.
+     *
+     * @link http://php.net/manual/en/function.localtime.php
+     */
     public function localtime($time = null, $isAssoc = false)
     {
         if (null === $time) {
             $time = $this->time;
         }
-        $this->shift();
-        return $this->_unshift(localtime($time, $isAssoc));
+        return $this->inContext(function () use ($time, $isAssoc) {
+            return localtime($time, $isAssoc);
+        });
     }
 
-    // FIX
-    public function mktime($h = null, $m = null, $s = null, $mm = null, $dd = null, $yy = null)
-    {
-        $this->shift();
-        return $this->_unshift(mktime($h, $m, $s, $mm, $dd, $yy, idate('I')));
-    }
-
+    /**
+     * Format a local time/date according to the timezone given in the constructor.
+     *
+     * @link http://php.net/manual/en/function.strftime.php
+     */
     public function strftime($format, $time = null)
     {
         if (null === $time) {
             $time = $this->time;
         }
-        $this->shift();
-        return $this->_unshift(strftime($format, $time));
+        return $this->inContext(function () use ($format, $time) {
+            return strftime($format, $time);
+        });
     }
-
-    public function strptime($date, $format)
-    {
-        $this->shift();
-        return $this->_unshift(strptime($date, $format));
-    }
-
-    */
 }
