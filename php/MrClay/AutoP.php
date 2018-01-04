@@ -8,6 +8,8 @@
  * In DIV elements, Ps are only added when there would be at
  * least two of them.
  *
+ * @link http://www.mrclay.org/wpautop-functional-specification/
+ *
  * @author Steve Clay <steve@mrclay.org>
  * @license http://www.opensource.org/licenses/mit-license.php  MIT License
  */
